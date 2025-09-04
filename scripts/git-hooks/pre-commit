@@ -1,0 +1,35 @@
+#!/bin/bash
+echo "*********************************************************"
+echo "Running git pre-commit hook. Running formatting analysis... "
+echo "*********************************************************"
+
+./gradlew ktlintCheck
+
+status=$?
+
+if [ "$status" = 0 ] ; then
+    echo "No formatting issues found."
+else
+    echo "*********************************************************"
+    echo 1>&2 "ktlint found lint code formatting issues"
+    echo "Run ./gradlew ktlintFormat to format your code"
+    echo "*********************************************************"
+    exit 1
+fi
+
+echo "*********************************************************"
+echo "Running git pre-commit hook. Running lint analysis... "
+echo "*********************************************************"
+
+./gradlew lint
+
+status=$?
+if [ "$status" = 0 ] ; then
+    echo "Linter found no problems."
+    exit 0
+else
+    echo "*********************************************************"
+    echo 1>&2 "Lint checks failed, please fix the issues and try again"
+    echo "*********************************************************"
+    exit 1
+fi
