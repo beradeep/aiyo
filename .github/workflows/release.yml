@@ -155,9 +155,11 @@ jobs:
       - name: Create new release with APK
         if: ${{ steps.commits.outputs.commits != '' }}
         run: |
+          echo "${{ steps.summary.outputs.summary }}" > release_notes.md
           gh release create ${{ steps.bump_version.outputs.next }} \
             --title "Release ${{ steps.bump_version.outputs.next }}" \
-            --notes "${{ steps.summary.outputs.summary }}" \
+            --notes-file release_notes.md \
             app/build/outputs/apk/githubRelease/app-githubRelease.apk#app-githubRelease.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
