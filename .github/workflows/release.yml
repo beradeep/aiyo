@@ -134,6 +134,10 @@ jobs:
           fi
           echo "next=$NEXT" >> $GITHUB_OUTPUT
 
+      # Grant permission for Gradlew
+      - name: Grant execute permission for Gradlew
+        run: chmod +x ./gradlew
+
       # Build APK
       - name: Build APK (GitHub Release)
         if: ${{ steps.commits.outputs.commits != '' }}
