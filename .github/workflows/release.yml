@@ -61,24 +61,25 @@ jobs:
         run: echo "No new commits since last release. Skipping release."
 
       # Summarize commits with OpenRouter
-      - name: Summarize commits with AI (OpenRouter)
+      - name: Generate summary with OpenRouter
         id: summary
-        if: ${{ steps.commits.outputs.commits != '' }}
         run: |
-          SUMMARY=$(curl https://openrouter.ai/api/v1/chat/completions \
-            -s \
+          RESPONSE=$(curl -s https://openrouter.ai/api/v1/chat/completions \
             -H "Authorization: Bearer ${{ secrets.OPENROUTER_API_KEY }}" \
             -H "Content-Type: application/json" \
             -d '{
-              "model": "openai/gpt-4o-mini",
+              "model": "anthropic/claude-3.5-sonnet",
               "messages": [
-                {"role": "system", "content": "You are a release notes generator. Categorize commits into 'Features' and 'Fixes' based on prefixes (feat:/fix:). Output bullet points only."},
-                {"role": "user", "content": "Commit messages:\n'"${{ steps.commits.outputs.commits }}"'"}
-              ],
-              "max_tokens": 400
+                {"role": "system", "content": "Summarize commit messages into concise bullet points for a changelog."},
+                {"role": "user", "content": "Commits:\n${{ steps.commits.outputs.commits }}"}
+              ]
             }' | jq -r '.choices[0].message.content')
 
-          echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
+          {
+            echo "summary<<EOF"
+            echo "$RESPONSE"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       # Determine bump type
       - name: Determine bump type
