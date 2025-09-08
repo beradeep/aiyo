@@ -71,9 +71,9 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.OPENROUTER_API_KEY }}" \
             -H "Content-Type: application/json" \
             -d '{
-              "model": "anthropic/claude-3.5-sonnet",
+              "model": "qwen/qwen3-coder:free",
               "messages": [
-                {"role": "system", "content": "Summarize commit messages into concise bullet points for a changelog."},
+                {"role": "system", "content": "Summarize commit messages into concise bullet points for a changelog. Output only the bullet points, nothing else."},
                 {"role": "user", "content": "Commits:\n${{ steps.commits.outputs.commits }}"}
               ]
             }' | jq -r '.choices[0].message.content')
@@ -157,9 +157,9 @@ jobs:
         run: |
           echo "${{ steps.summary.outputs.summary }}" > release_notes.md
           gh release create ${{ steps.bump_version.outputs.next }} \
-            --title "Release ${{ steps.bump_version.outputs.next }}" \
+            --title "aiyo ${{ steps.bump_version.outputs.next }}" \
             --notes-file release_notes.md \
-            app/build/outputs/apk/githubRelease/app-githubRelease.apk#app-githubRelease.apk
+            app/build/outputs/apk/githubRelease/app-githubRelease.apk#aiyo.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
