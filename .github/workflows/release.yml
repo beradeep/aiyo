@@ -2,19 +2,38 @@ name: Monthly Release
 
 on:
   schedule:
-    - cron: "0 0 1 * *" # Runs on the 1st of every month at 00:00 UTC
-  workflow_dispatch: # Manual trigger for testing
+    - cron: "0 0 1 * *"   # Runs on the 1st of every month at 00:00 UTC
+  workflow_dispatch:       # Allows manual trigger
 
 jobs:
   release:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout repo
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # Set up JDK for Android build
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # Set up Android SDK
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      # Restore signing keystore
+      - name: Decode and save signing key
+        run: |
+          echo "${{ secrets.SIGNING_KEYSTORE_BASE64 }}" | base64 --decode > release.keystore
+          echo "SIGNING_KEYSTORE_PATH=$PWD/release.keystore" >> $GITHUB_ENV
+
+      # Get latest release tag
       - name: Get latest release tag
         id: latest_release
         run: |
@@ -23,6 +42,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Get commits since last release
       - name: Get commits since last release
         id: commits
         run: |
@@ -35,11 +55,13 @@ jobs:
           echo "$COMMITS" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
+      # Stop if no new commits
       - name: Stop if no new commits
         if: ${{ steps.commits.outputs.commits == '' }}
         run: echo "No new commits since last release. Skipping release."
 
-      - name: Summarize commits with AI
+      # Summarize commits with OpenRouter
+      - name: Summarize commits with AI (OpenRouter)
         id: summary
         if: ${{ steps.commits.outputs.commits != '' }}
         run: |
@@ -48,17 +70,17 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.OPENROUTER_API_KEY }}" \
             -H "Content-Type: application/json" \
             -d '{
-              "model": "microsoft/mai-ds-r1:free",
+              "model": "openai/gpt-4o-mini",
               "messages": [
-                {"role": "system", "content": "You are a release notes generator. Summarize commits into bullet points for a GitHub release."},
+                {"role": "system", "content": "You are a release notes generator. Categorize commits into 'Features' and 'Fixes' based on prefixes (feat:/fix:). Output bullet points only."},
                 {"role": "user", "content": "Commit messages:\n'"${{ steps.commits.outputs.commits }}"'"}
               ],
-              "max_tokens": 300
+              "max_tokens": 400
             }' | jq -r '.choices[0].message.content')
 
           echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
 
-
+      # Determine bump type
       - name: Determine bump type
         id: bump_type
         if: ${{ steps.commits.outputs.commits != '' }}
@@ -81,6 +103,7 @@ jobs:
 
           echo "bump=$BUMP" >> $GITHUB_OUTPUT
 
+      # Compute next version
       - name: Compute next version
         id: bump_version
         if: ${{ steps.commits.outputs.commits != '' }}
@@ -110,11 +133,23 @@ jobs:
           fi
           echo "next=$NEXT" >> $GITHUB_OUTPUT
 
-      - name: Create new release
+      # Build APK
+      - name: Build APK (GitHub Release)
+        if: ${{ steps.commits.outputs.commits != '' }}
+        run: ./gradlew assembleGithubRelease
+        env:
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_KEYSTORE_PATH: ${{ env.SIGNING_KEYSTORE_PATH }}
+
+      # Upload release with APK
+      - name: Create new release with APK
         if: ${{ steps.commits.outputs.commits != '' }}
         run: |
           gh release create ${{ steps.bump_version.outputs.next }} \
             --title "Release ${{ steps.bump_version.outputs.next }}" \
-            --notes "${{ steps.summary.outputs.choices_0_text }}"
+            --notes "${{ steps.summary.outputs.summary }}" \
+            app/build/outputs/apk/githubRelease/app-githubRelease.apk#app-githubRelease.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
