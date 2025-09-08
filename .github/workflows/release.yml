@@ -1,0 +1,120 @@
+name: Monthly Release
+
+on:
+  schedule:
+    - cron: "0 0 1 * *" # Runs on the 1st of every month at 00:00 UTC
+  workflow_dispatch: # Manual trigger for testing
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest release tag
+        id: latest_release
+        run: |
+          TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName' || echo "")
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get commits since last release
+        id: commits
+        run: |
+          if [ -z "${{ steps.latest_release.outputs.tag }}" ]; then
+            COMMITS=$(git log --pretty=format:"%s" origin/master)
+          else
+            COMMITS=$(git log ${{ steps.latest_release.outputs.tag }}..origin/master --pretty=format:"%s")
+          fi
+          echo "commits<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMMITS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Stop if no new commits
+        if: ${{ steps.commits.outputs.commits == '' }}
+        run: echo "No new commits since last release. Skipping release."
+
+      - name: Summarize commits with AI
+        id: summary
+        if: ${{ steps.commits.outputs.commits != '' }}
+        run: |
+          SUMMARY=$(curl https://openrouter.ai/api/v1/chat/completions \
+            -s \
+            -H "Authorization: Bearer ${{ secrets.OPENROUTER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "model": "microsoft/mai-ds-r1:free",
+              "messages": [
+                {"role": "system", "content": "You are a release notes generator. Summarize commits into bullet points for a GitHub release."},
+                {"role": "user", "content": "Commit messages:\n'"${{ steps.commits.outputs.commits }}"'"}
+              ],
+              "max_tokens": 300
+            }' | jq -r '.choices[0].message.content')
+
+          echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
+
+
+      - name: Determine bump type
+        id: bump_type
+        if: ${{ steps.commits.outputs.commits != '' }}
+        run: |
+          COMMITS="${{ steps.commits.outputs.commits }}"
+          BUMP="patch"
+
+          if echo "$COMMITS" | grep -q "^feat:"; then
+            BUMP="minor"
+          fi
+          if echo "$COMMITS" | grep -q "^fix:" && [ "$BUMP" = "patch" ]; then
+            BUMP="patch"
+          fi
+
+          # Force major bump in January
+          MONTH=$(date +'%m')
+          if [ "$MONTH" = "01" ]; then
+            BUMP="major"
+          fi
+
+          echo "bump=$BUMP" >> $GITHUB_OUTPUT
+
+      - name: Compute next version
+        id: bump_version
+        if: ${{ steps.commits.outputs.commits != '' }}
+        run: |
+          if [ -z "${{ steps.latest_release.outputs.tag }}" ]; then
+            NEXT="v1.0.0"
+          else
+            LATEST=${{ steps.latest_release.outputs.tag }}
+            BASE=${LATEST#v}
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE"
+
+            case "${{ steps.bump_type.outputs.bump }}" in
+              major)
+                MAJOR=$((MAJOR + 1))
+                MINOR=0
+                PATCH=0
+                ;;
+              minor)
+                MINOR=$((MINOR + 1))
+                PATCH=0
+                ;;
+              patch)
+                PATCH=$((PATCH + 1))
+                ;;
+            esac
+            NEXT="v$MAJOR.$MINOR.$PATCH"
+          fi
+          echo "next=$NEXT" >> $GITHUB_OUTPUT
+
+      - name: Create new release
+        if: ${{ steps.commits.outputs.commits != '' }}
+        run: |
+          gh release create ${{ steps.bump_version.outputs.next }} \
+            --title "Release ${{ steps.bump_version.outputs.next }}" \
+            --notes "${{ steps.summary.outputs.choices_0_text }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
