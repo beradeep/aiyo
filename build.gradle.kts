@@ -33,7 +33,18 @@ allprojects {
 tasks.register<Copy>("installPreCommitHook") {
     from(File(rootProject.rootDir, "scripts/git-hooks/pre-commit"))
     into(File(rootProject.rootDir, ".git/hooks"))
-    fileMode = "0777".toInt(8)
+    filePermissions {
+        user {
+            read = true
+            write = true
+            execute = true
+        }
+        other {
+            read = true
+            write = true
+            execute = true
+        }
+    }
 }
 
 tasks.getByPath(":app:preBuild").dependsOn(":installPreCommitHook")
