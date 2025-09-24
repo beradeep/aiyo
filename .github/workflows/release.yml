@@ -86,14 +86,15 @@ jobs:
 
       - name: Generate summary (AI with fallback)
         id: summary
-        if: ${{ steps.check_version_change.outputs.changed == 'true' && steps.commits.outputs.commits != '' }}
         run: |
           COMMITS="${{ steps.commits.outputs.commits }}"
+          CONTENT="Commits:\n$COMMITS"
+
           PAYLOAD=$(jq -nc \
             --arg model "mistralai/mistral-small-3.2-24b-instruct:free" \
             --arg system "Summarize commit messages into concise bullet points for a changelog. Output only the bullet points, nothing else." \
-            --arg commits "$COMMITS" \
-            '{model:$model,messages:[{role:"system",content:$system},{role:"user",content:"Commits:\n"+$commits}] }')
+            --arg content "$CONTENT" \
+            '{model:$model, messages:[{role:"system",content:$system},{role:"user",content:$content}] }')
 
           RESPONSE=$(curl -s https://openrouter.ai/api/v1/chat/completions \
             -H "Authorization: Bearer ${{ secrets.OPENROUTER_API_KEY }}" \
@@ -112,6 +113,7 @@ jobs:
             echo "$SUMMARY"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
+
 
       - name: Write F-Droid changelog file
         if: ${{ steps.check_version_change.outputs.changed == 'true' }}
