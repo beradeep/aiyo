@@ -14,6 +14,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout repo first
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2   # fetch enough history to compare commits
+
+      # Now check if last commit was from GitHub Actions bot
       - name: Skip if last commit is from GitHub Actions bot
         run: |
           AUTHOR=$(git log -1 --pretty=format:'%an')
@@ -21,11 +28,6 @@ jobs:
             echo "Last commit was from GitHub Actions bot. Skipping workflow."
             exit 0
           fi
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Extract versionName and versionCode
         id: version
