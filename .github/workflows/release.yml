@@ -14,148 +14,137 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout repo (full history so we can diff)
+      - name: Skip if last commit is from GitHub Actions bot
+        run: |
+          AUTHOR=$(git log -1 --pretty=format:'%an')
+          if [ "$AUTHOR" = "github-actions[bot]" ]; then
+            echo "Last commit was from GitHub Actions bot. Skipping workflow."
+            exit 0
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # Extract versionName and versionCode from build.gradle.kts
       - name: Extract versionName and versionCode
         id: version
         run: |
           FILE=app/build.gradle.kts
-
-          # versionName like: versionName = "1.2.3"
           VERSION_NAME=$(sed -n 's/.*versionName\s*=\s*"\(.*\)".*/\1/p' "$FILE" || true)
-          # versionCode like: versionCode = 123
           VERSION_CODE=$(sed -n 's/.*versionCode\s*=\s*\([0-9][0-9]*\).*/\1/p' "$FILE" || true)
-
           echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
           echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
 
-      # Check whether versionCode changed compared to previous commit
       - name: Check if versionCode changed
         id: check_version_change
         run: |
-          # Get previous commit's copy of the file if available
           if git rev-parse --verify HEAD^ >/dev/null 2>&1; then
-            OLD_FILE=$(git show HEAD^:app/build.gradle.kts 2>/dev/null || true)
-            OLD_CODE=$(printf '%s\n' "$OLD_FILE" | sed -n 's/.*versionCode\s*=\s*\([0-9][0-9]*\).*/\1/p' || true)
+            OLD_CODE=$(git show HEAD^:app/build.gradle.kts 2>/dev/null | sed -n 's/.*versionCode\s*=\s*\([0-9][0-9]*\).*/\1/p' || true)
           else
             OLD_CODE=""
           fi
-
           NEW_CODE="${{ steps.version.outputs.version_code }}"
-
-          echo "old_version_code=$OLD_CODE" >> $GITHUB_OUTPUT
-          echo "new_version_code=$NEW_CODE" >> $GITHUB_OUTPUT
-
           if [ "$OLD_CODE" = "$NEW_CODE" ]; then
             echo "changed=false" >> $GITHUB_OUTPUT
-            echo "Version code unchanged ($NEW_CODE). Skipping release steps."
+            echo "Version code unchanged ($NEW_CODE). Skipping release."
           else
             echo "changed=true" >> $GITHUB_OUTPUT
-            echo "Version code changed: from '$OLD_CODE' to '$NEW_CODE'. Proceeding with release."
+            echo "Version code changed from $OLD_CODE to $NEW_CODE"
           fi
 
-      # Set up JDK for Android build
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
-      # Set up Android SDK
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      # Restore signing keystore
       - name: Decode and save signing key
         if: ${{ steps.check_version_change.outputs.changed == 'true' }}
         run: |
           echo "${{ secrets.SIGNING_KEYSTORE_BASE64 }}" | base64 --decode > release.keystore
           echo "SIGNING_KEYSTORE_PATH=$PWD/release.keystore" >> $GITHUB_ENV
 
-      # Get commits since last tag (or entire history if no tag)
       - name: Get commits since last tag
         id: commits
         if: ${{ steps.check_version_change.outputs.changed == 'true' }}
         run: |
-          # Try to obtain the last tag (if any)
           LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           if [ -z "$LAST_TAG" ]; then
             COMMITS=$(git log --pretty=format:"%s")
           else
             COMMITS=$(git log "$LAST_TAG"..HEAD --pretty=format:"%s")
           fi
-
           echo "commits<<EOF" >> $GITHUB_OUTPUT
           echo "$COMMITS" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      # Summarize commits with OpenRouter (fallback to commit bullets if AI returns empty)
-      - name: Generate summary with OpenRouter
+      - name: Generate summary (AI with fallback)
         id: summary
         if: ${{ steps.check_version_change.outputs.changed == 'true' && steps.commits.outputs.commits != '' }}
         run: |
           COMMITS="${{ steps.commits.outputs.commits }}"
-
-          # Build JSON payload robustly using jq (jq is available on GitHub runners)
           PAYLOAD=$(jq -nc \
             --arg model "mistralai/mistral-small-3.2-24b-instruct:free" \
             --arg system "Summarize commit messages into concise bullet points for a changelog. Output only the bullet points, nothing else." \
             --arg commits "$COMMITS" \
-            '{model: $model, messages: [{role: "system", content: $system}, {role: "user", content: ("Commits:\n"+$commits)}] }')
+            '{model:$model,messages:[{role:"system",content:$system},{role:"user",content:"Commits:\n"+$commits}] }')
 
           RESPONSE=$(curl -s https://openrouter.ai/api/v1/chat/completions \
             -H "Authorization: Bearer ${{ secrets.OPENROUTER_API_KEY }}" \
             -H "Content-Type: application/json" \
-            -d "$PAYLOAD" \
-            | jq -r '.choices[0].message.content // empty' )
+            -d "$PAYLOAD" | jq -r '.choices[0].message.content // empty')
 
-          # If AI returned nothing, fallback to raw commit messages formatted as bullets
           if [ -z "$RESPONSE" ]; then
-            echo "AI summary empty — falling back to raw commit messages."
-            # Remove empty lines and prefix each line with '- '
-            FALLBACK_SUMMARY=$(printf '%s\n' "$COMMITS" | sed '/^$/d' | sed 's/^/- /')
-            SUMMARY="$FALLBACK_SUMMARY"
+            echo "AI summary empty — using commits."
+            SUMMARY=$(printf '%s\n' "$COMMITS" | sed '/^$/d' | sed 's/^/- /')
           else
             SUMMARY="$RESPONSE"
           fi
 
-          # Output summary
           {
             echo "summary<<EOF"
             echo "$SUMMARY"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
-      # Compute release tag from versionName (prefix with 'v' if missing)
+      - name: Write F-Droid changelog file
+        if: ${{ steps.check_version_change.outputs.changed == 'true' }}
+        run: |
+          mkdir -p metadata/en-US/changelogs
+          FILE="metadata/en-US/changelogs/${{ steps.version.outputs.version_code }}.txt"
+          echo "${{ steps.summary.outputs.summary }}" > "$FILE"
+          echo "F-Droid changelog written to $FILE"
+
+      - name: Auto-commit F-Droid changelog
+        if: ${{ steps.check_version_change.outputs.changed == 'true' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add metadata/en-US/changelogs/${{ steps.version.outputs.version_code }}.txt
+          git commit -m "chore: add F-Droid changelog for versionCode ${{ steps.version.outputs.version_code }}" || echo "No changes to commit"
+          git push origin HEAD:${GITHUB_REF#refs/heads/}
+
       - name: Compute release tag from versionName
         id: release_tag
         if: ${{ steps.check_version_change.outputs.changed == 'true' }}
         run: |
           VN="${{ steps.version.outputs.version_name }}"
-          if [ -z "$VN" ]; then
-            echo "No versionName found in app/build.gradle.kts. Exiting."
-            exit 1
-          fi
           if [[ "$VN" == v* ]]; then
             TAG="$VN"
           else
             TAG="v$VN"
           fi
           echo "tag=$TAG" >> $GITHUB_OUTPUT
-          echo "Using release tag: $TAG"
 
-      # Grant permission for Gradlew
       - name: Grant execute permission for Gradlew
         if: ${{ steps.check_version_change.outputs.changed == 'true' }}
         run: chmod +x ./gradlew
 
-      # Build APK
-      - name: Build APK (GitHub Release)
+      - name: Build APK
         if: ${{ steps.check_version_change.outputs.changed == 'true' }}
         run: ./gradlew assembleGithubRelease
         env:
@@ -164,13 +153,10 @@ jobs:
           SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
           SIGNING_KEYSTORE_PATH: ${{ env.SIGNING_KEYSTORE_PATH }}
 
-      # Upload release with APK using versionName-derived tag
       - name: Create new release with APK
         if: ${{ steps.check_version_change.outputs.changed == 'true' }}
         run: |
-          # write release notes (summary will contain AI summary or fallback bullets)
-          echo "${{ steps.summary.outputs.summary }}" > release_notes.md || true
-
+          echo "${{ steps.summary.outputs.summary }}" > release_notes.md
           gh release create "${{ steps.release_tag.outputs.tag }}" \
             --title "aiyo ${{ steps.release_tag.outputs.tag }}" \
             --notes-file release_notes.md \
