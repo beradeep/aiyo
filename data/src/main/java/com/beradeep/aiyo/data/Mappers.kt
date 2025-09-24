@@ -2,7 +2,6 @@ package com.beradeep.aiyo.data
 
 import com.aallam.openai.api.chat.ChatMessage
 import com.aallam.openai.api.chat.ChatRole
-import com.aallam.openai.api.model.Model as OpenAIModel
 import com.beradeep.aiyo.data.local.entity.ConversationEntity
 import com.beradeep.aiyo.data.local.entity.MessageEntity
 import com.beradeep.aiyo.domain.model.Conversation
@@ -11,6 +10,7 @@ import com.beradeep.aiyo.domain.model.Model
 import com.beradeep.aiyo.domain.model.Role
 import java.util.Date
 import java.util.UUID
+import com.aallam.openai.api.model.Model as OpenAIModel
 
 fun ChatMessage.toChatMessage(): Message = Message(
     role = this.role.toRole(),

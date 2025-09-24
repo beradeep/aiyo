@@ -1,6 +1,5 @@
 package com.beradeep.aiyo.data.repository
 
-import android.util.Log
 import com.aallam.openai.api.chat.ChatCompletionRequest
 import com.aallam.openai.api.chat.Effort
 import com.aallam.openai.api.chat.StreamOptions
@@ -17,14 +16,9 @@ import com.beradeep.aiyo.domain.model.Message
 import com.beradeep.aiyo.domain.model.Model
 import com.beradeep.aiyo.domain.model.Reason
 import com.beradeep.aiyo.domain.repository.ChatRepository
-import java.io.IOException
-import java.net.ConnectException
-import java.net.SocketTimeoutException
-import java.net.UnknownHostException
-import javax.net.ssl.SSLException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapNotNull
 
@@ -97,7 +91,9 @@ class ChatRepositoryImpl(
                         .first()
                         .delta
                         ?.content
-                }.flowOn(Dispatchers.IO)
+                }
+                .catch { e -> e.message?.let { emit("Error: $it") } }
+                .flowOn(Dispatchers.IO)
         }
     } ?: Result.failure(IllegalStateException("OpenAI client not initialized"))
 
@@ -141,54 +137,5 @@ class ChatRepositoryImpl(
         messageDao.deleteMessagesByConversation(conversationId)
     }
 
-    suspend fun <T> safeCall(call: suspend () -> T): Result<T> = try {
-        Result.success(call())
-    } catch (e: UnknownHostException) {
-        Log.e("ChatRepositoryImpl", "Network error - no internet connection: ${e.message}")
-        Result.failure(Exception("No internet connection. Please check your network."))
-    } catch (e: SocketTimeoutException) {
-        Log.e("ChatRepositoryImpl", "Request timeout: ${e.message}")
-        Result.failure(Exception("Request timed out. Please try again."))
-    } catch (e: ConnectException) {
-        Log.e("ChatRepositoryImpl", "Connection failed: ${e.message}")
-        Result.failure(Exception("Failed to connect to the server. Please try again."))
-    } catch (e: SSLException) {
-        Log.e("ChatRepositoryImpl", "SSL/TLS error: ${e.message}")
-        Result.failure(
-            Exception("Secure connection failed. Please check your network settings.")
-        )
-    } catch (e: IOException) {
-        Log.e("ChatRepositoryImpl", "Network I/O error: ${e.message}")
-        Result.failure(Exception("Network error occurred. Please check your connection."))
-    } catch (e: TimeoutCancellationException) {
-        Log.e("ChatRepositoryImpl", "Operation cancelled due to timeout: ${e.message}")
-        Result.failure(Exception("Operation timed out. Please try again."))
-    } catch (e: IllegalArgumentException) {
-        Log.e("ChatRepositoryImpl", "Invalid request parameters: ${e.message}")
-        Result.failure(Exception("Invalid request. Please check your input."))
-    } catch (e: Exception) {
-        Log.e("ChatRepositoryImpl", "Error getting streaming completion: ${e.message}", e)
-        when {
-            e.message?.contains("401") == true ->
-                Result.failure(Exception("Invalid API key. Please check your credentials."))
-
-            e.message?.contains("403") == true ->
-                Result.failure(
-                    Exception("Access forbidden. Please check your API key permissions.")
-                )
-
-            e.message?.contains("429") == true ->
-                Result.failure(Exception("Rate limit exceeded. Please try again later."))
-
-            e.message?.contains("500") == true ->
-                Result.failure(Exception("Server error. Please try again later."))
-
-            e.message?.contains("502") == true || e.message?.contains("503") == true ->
-                Result.failure(
-                    Exception("Service temporarily unavailable. Please try again later.")
-                )
-
-            else -> Result.failure(Exception("An unexpected error occurred: ${e.message}"))
-        }
-    }
+    suspend fun <T> safeCall(call: suspend () -> T): Result<T> = runCatching { call() }
 }

@@ -13,10 +13,6 @@ import com.beradeep.aiyo.domain.model.Role
 import com.beradeep.aiyo.domain.repository.ApiKeyRepository
 import com.beradeep.aiyo.domain.repository.ChatRepository
 import com.mikepenz.markdown.model.parseMarkdownFlow
-import java.text.DateFormat
-import java.util.Date
-import java.util.LinkedHashMap
-import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,6 +24,10 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.text.DateFormat
+import java.util.Date
+import java.util.LinkedHashMap
+import java.util.UUID
 
 open class ChatViewModel(
     private val apiKeyRepository: ApiKeyRepository,

@@ -279,12 +279,12 @@ class TopBarState(
                     it.contentOffset
                 )
             }, restore = {
-                TopBarState(
-                    initialHeightOffsetLimit = it[0],
-                    initialHeightOffset = it[1],
-                    initialContentOffset = it[2]
-                )
-            })
+                    TopBarState(
+                        initialHeightOffsetLimit = it[0],
+                        initialHeightOffset = it[1],
+                        initialContentOffset = it[2]
+                    )
+                })
     }
 
     private var _heightOffset = mutableFloatStateOf(initialHeightOffset)
