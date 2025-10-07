@@ -8,5 +8,8 @@ import java.util.UUID
 data class ConversationEntity(
     @PrimaryKey val id: UUID,
     val title: String,
-    val createdAt: Long = System.currentTimeMillis()
+    val selectedModel: String,
+    val isStarred: Boolean,
+    val lastUpdatedAt: Long,
+    val createdAt: Long
 )

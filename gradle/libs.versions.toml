@@ -86,4 +86,5 @@ kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", vers
 lumo = { id = "com.nomanr.plugin.lumo", version.ref = "lumo" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
+room = { id = "androidx.room", version.ref = "room" }
 

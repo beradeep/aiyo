@@ -20,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 
 class ChatRepositoryImpl(
@@ -102,12 +103,22 @@ class ChatRepositoryImpl(
             it.toDomain()
         }
 
-    override suspend fun createConversation(title: String): Conversation {
+    override fun getConversationsFlow(): Flow<List<Conversation>> {
+        return conversationDao.getAllConversationsFlow()
+            .map { flow -> flow.map { it.toDomain() } }
+            .flowOn(Dispatchers.IO)
+    }
+
+    override suspend fun createConversation(title: String, model: Model, isStarred: Boolean): Conversation {
+        val timeStamp = System.currentTimeMillis()
         val conversation =
             Conversation(
                 id = java.util.UUID.randomUUID(),
                 title = title,
-                createdAt = System.currentTimeMillis()
+                selectedModel = model,
+                isStarred = isStarred,
+                createdAt = timeStamp,
+                lastUpdatedAt = timeStamp
             )
         conversationDao.upsertConversation(conversation.toEntity())
         return conversation

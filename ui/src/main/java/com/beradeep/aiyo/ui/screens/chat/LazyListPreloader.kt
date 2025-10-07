@@ -10,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import com.beradeep.aiyo.domain.model.Conversation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -20,19 +21,19 @@ import kotlinx.coroutines.withContext
 @Composable
 fun LazyListPreloader(
     listState: LazyListState,
-    selectedConversationId: String?,
+    selectedConversation: Conversation?,
     preloadRequest: (Int) -> Unit,
     cancelPreviousRequests: () -> Unit,
     maxPreload: Int
 ) {
-    var lastEnd by remember(selectedConversationId) { mutableIntStateOf(0) }
-    var lastStart by remember(selectedConversationId) { mutableIntStateOf(0) }
-    var lastFirstVisible by remember(selectedConversationId) { mutableIntStateOf(-1) }
-    var wasIncreasing by remember(selectedConversationId) { mutableStateOf(true) }
+    var lastEnd by remember(selectedConversation?.id) { mutableIntStateOf(0) }
+    var lastStart by remember(selectedConversation?.id) { mutableIntStateOf(0) }
+    var lastFirstVisible by remember(selectedConversation?.id) { mutableIntStateOf(-1) }
+    var wasIncreasing by remember(selectedConversation?.id) { mutableStateOf(true) }
 
     val scope = rememberCoroutineScope()
 
-    DisposableEffect(selectedConversationId) {
+    DisposableEffect(selectedConversation?.id) {
         val job =
             scope.launch {
                 val flow =

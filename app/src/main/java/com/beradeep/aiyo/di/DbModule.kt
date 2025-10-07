@@ -1,7 +1,6 @@
 package com.beradeep.aiyo.di
 
 import android.content.Context
-import androidx.room.Room
 import com.beradeep.aiyo.data.local.AiyoDatabase
 import dagger.Module
 import dagger.Provides
@@ -15,7 +14,6 @@ import javax.inject.Singleton
 object DbModule {
     @Provides
     @Singleton
-    fun provideAiyoDatabase(@ApplicationContext context: Context): AiyoDatabase = Room
-        .databaseBuilder(context, AiyoDatabase::class.java, "aiyo.db")
-        .build()
+    fun provideAiyoDatabase(@ApplicationContext context: Context): AiyoDatabase =
+        AiyoDatabase.create(context)
 }

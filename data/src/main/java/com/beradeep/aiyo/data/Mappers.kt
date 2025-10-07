@@ -40,13 +40,19 @@ fun OpenAIModel.toModel(): Model = Model(
 fun ConversationEntity.toDomain(): Conversation = Conversation(
     id = id,
     title = title,
-    createdAt = createdAt
+    selectedModel = Model(selectedModel),
+    isStarred = isStarred,
+    createdAt = createdAt,
+    lastUpdatedAt = lastUpdatedAt
 )
 
 fun Conversation.toEntity(): ConversationEntity = ConversationEntity(
     id = id,
     title = title,
-    createdAt = createdAt
+    isStarred = isStarred,
+    createdAt = createdAt,
+    lastUpdatedAt = lastUpdatedAt,
+    selectedModel = selectedModel.id
 )
 
 fun MessageEntity.toDomain(): Message = Message(

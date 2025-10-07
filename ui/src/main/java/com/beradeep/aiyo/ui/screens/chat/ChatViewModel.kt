@@ -1,6 +1,7 @@
 package com.beradeep.aiyo.ui.screens.chat
 
 import android.util.Log
+import androidx.collection.mutableIntObjectMapOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
@@ -26,7 +27,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.DateFormat
 import java.util.Date
-import java.util.LinkedHashMap
 import java.util.UUID
 
 open class ChatViewModel(
@@ -37,42 +37,33 @@ open class ChatViewModel(
     private val messages = mutableStateListOf<UiMessage>()
     private val conversations = mutableStateListOf<Conversation>()
 
-    private val maxPreload = 10
-    private val _uiState = MutableStateFlow(ChatUiState.Default.copy(maxPreload = maxPreload))
+    private val _uiState = MutableStateFlow(ChatUiState.Default)
 
     private val messagesFlow = snapshotFlow { messages.toList() }
-    private val conversationsFlow = snapshotFlow { conversations.toList() }
 
     val uiState =
         combine(
             _uiState,
             messagesFlow,
-            conversationsFlow
+            chatRepository.getConversationsFlow()
         ) { state, messages, conversations ->
             state.copy(
                 messages = messages,
-                conversations = conversations
+                conversations = when (_uiState.value.conversationFilter) {
+                    ConversationFilter.RECENT -> conversations
+                    ConversationFilter.STARRED -> conversations.filter { it.isStarred }
+                }
             )
         }.onStart {
             loadApiKey()
             fetchModels()
-            loadConversations()
         }.stateIn(
             viewModelScope,
             SharingStarted.Lazily,
-            ChatUiState.Default.copy(maxPreload = maxPreload)
+            ChatUiState.Default
         )
 
-    private val preloadJobs =
-        object : LinkedHashMap<Int, Job>(maxPreload + 1, 0.75f, true) {
-            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Int, Job>?): Boolean =
-                if (size > maxPreload) {
-                    eldest?.value?.cancel()
-                    true
-                } else {
-                    false
-                }
-        }
+    private val preloadJobs = mutableIntObjectMapOf<Job>()
 
     fun onUiEvent(chatUiEvent: ChatUiEvent) {
         when (chatUiEvent) {
@@ -90,17 +81,36 @@ open class ChatViewModel(
                     )
                 }
 
-            is ChatUiEvent.OnCreateNewConversation -> viewModelScope.launch {
-                createNewConversation()
+            is ChatUiEvent.OnNewChat -> {
+                _uiState.update { it.copy(selectedConversation = null) }
+                messages.clear()
             }
-            is ChatUiEvent.OnLoadConversations -> viewModelScope.launch { loadConversations() }
+
             ChatUiEvent.OnWebSearchTapped -> _uiState.update {
                 it.copy(isWebSearchEnabled = !it.isWebSearchEnabled)
             }
+
             is ChatUiEvent.OnReason -> _uiState.update {
                 it.copy(reasoningEffort = chatUiEvent.reason)
             }
+
+            is ChatUiEvent.OnDeleteConversation -> viewModelScope.launch {
+                deleteConversation(chatUiEvent.conversation)
+            }
+
+            is ChatUiEvent.OnUpdateConversation -> viewModelScope.launch {
+                updateConversation(chatUiEvent.conversation)
+            }
+
+            is ChatUiEvent.OnConversationFilterSelected -> _uiState.update {
+                it.copy(conversationFilter = chatUiEvent.filter)
+            }
         }
+    }
+
+    private suspend fun updateConversation(conversation: Conversation) {
+        chatRepository.updateConversation(conversation)
+        _uiState.update { it.copy(selectedConversation = conversation) }
     }
 
     private fun editInputText(string: String) {
@@ -122,7 +132,7 @@ open class ChatViewModel(
         val isLoadingResponse = uiState.value.isLoadingResponse
         if (text.isEmpty() || isLoadingResponse) return
 
-        if (uiState.value.selectedConversationId == null) {
+        if (uiState.value.selectedConversation == null) {
             createNewConversation()
         }
 
@@ -186,16 +196,16 @@ open class ChatViewModel(
         _uiState.update { it.copy(isLoadingResponse = false) }
 
         Log.d("ChatViewModel", "Updating conversation title...")
-        updateConversationTitle()
+        aiUpdateConversationTitle()
     }
 
-    private suspend fun updateConversationTitle() {
+    private suspend fun aiUpdateConversationTitle() {
         if (messages.size == 2) {
             val prompt =
                 Message(
                     id = UUID.randomUUID(),
                     role = Role.User,
-                    content = "Summarize the conversation in 3 words."
+                    content = "Set a title for the conversation in 3-4 words."
                 )
             val summaryTitle =
                 chatRepository.getChatCompletion(
@@ -205,12 +215,7 @@ open class ChatViewModel(
                 )
             summaryTitle
                 .onSuccess { title ->
-                    val conversation =
-                        conversations.find {
-                            it.id.toString() ==
-                                uiState.value.selectedConversationId
-                        }
-                    conversation?.let {
+                    uiState.value.selectedConversation?.let { conversation ->
                         title?.let {
                             chatRepository.updateConversation(
                                 conversation.copy(title = title.trim('"'))
@@ -222,51 +227,44 @@ open class ChatViewModel(
     }
 
     private suspend fun saveMessage(message: Message) {
-        uiState.value.selectedConversationId?.let { conversationId ->
-            chatRepository.insertMessage(message, UUID.fromString(conversationId))
+        uiState.value.selectedConversation?.let { conversation ->
+            chatRepository.insertMessage(message, conversation.id)
         }
     }
 
+    private fun getConversationById(conversationId: String): Conversation? {
+        return conversations.find { it.id.toString() == conversationId }
+    }
+
     private suspend fun fetchModels() {
-        val models = chatRepository.getModels(_uiState.value.apiKey)
-        models
-            .onSuccess { models ->
-                _uiState.update { it.copy(models = models) }
-            }.onFailure { error ->
-                // TODO
-            }
+        _uiState.update { it.copy(isFetchingModels = true) }
+        chatRepository
+            .getModels(_uiState.value.apiKey)
+            .onSuccess { models -> _uiState.update { it.copy(models = models) } }
+        _uiState.update { it.copy(isFetchingModels = false) }
     }
 
     private fun selectModel(model: Model) {
         _uiState.update { it.copy(selectedModel = model) }
     }
 
-    private suspend fun loadConversations() {
-        val conversationsUpdated = chatRepository.getConversations()
-        conversations.clear()
-        conversations.addAll(conversationsUpdated)
-    }
-
     private suspend fun createNewConversation(title: String? = null) {
         cancelExistingPreloadJobs()
 
-        val title = title ?: "New Chat: ${DateFormat.getDateTimeInstance().format(Date())}"
+        val title = title ?: "Untitled: ${DateFormat.getDateTimeInstance().format(Date())}"
         val conversation = chatRepository.createConversation(title)
         selectConversation(conversation)
-        loadConversations()
     }
 
     private suspend fun selectConversation(conversation: Conversation) {
         // Cancel existing preload jobs before switching conversations
         cancelExistingPreloadJobs()
 
-        _uiState.update { it.copy(selectedConversationId = conversation.id.toString()) }
+        _uiState.update { it.copy(selectedConversation = conversation, selectedModel = conversation.selectedModel) }
         messages.clear()
         messages.addAll(chatRepository.getMessages(conversation.id).map { it.toUiMessage() })
 
-        // Preload markdown for initially visible messages
-        val initialPreloadCount = minOf(maxPreload, messages.size)
-        for (i in 0 until initialPreloadCount) {
+        for (i in messages.indices) {
             preloadMarkdownForIndex(i)
         }
     }
@@ -274,8 +272,11 @@ open class ChatViewModel(
     private suspend fun deleteConversation(conversation: Conversation) {
         chatRepository.deleteMessages(conversation.id)
         chatRepository.deleteConversation(conversation.id)
-        loadConversations()
         messages.clear()
+    }
+
+    private suspend fun starConversation(conversation: Conversation) {
+        chatRepository.updateConversation(conversation.copy(isStarred = true))
     }
 
     private fun parseMarkdownForIndex(index: Int): Job? {
@@ -306,7 +307,7 @@ open class ChatViewModel(
     }
 
     private fun cancelExistingPreloadJobs() {
-        preloadJobs.forEach { (_, job) -> job.cancel() }
+        preloadJobs.forEach { _, job -> job.cancel() }
         preloadJobs.clear()
     }
 }

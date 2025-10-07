@@ -9,9 +9,7 @@ import kotlin.time.Duration.Companion.seconds
 class ApiClientImpl(private val apiKeyRepository: ApiKeyRepository) : DataApiClient {
     private val apiKey get() = apiKeyRepository.getApiKey()
 
-    init {
-        load()
-    }
+    init { load() }
 
     @Volatile
     override var openAI: OpenAI? = null
@@ -23,7 +21,7 @@ class ApiClientImpl(private val apiKeyRepository: ApiKeyRepository) : DataApiCli
                     OpenAI(
                         token = key,
                         host = OpenAIHost(DataApiClient.BASE_URL),
-                        timeout = Timeout(socket = 60.seconds)
+                        timeout = Timeout(connect = 30.seconds, socket = 120.seconds)
                     )
             }
         }

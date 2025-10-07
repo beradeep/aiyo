@@ -19,13 +19,17 @@ sealed interface ChatUiEvent {
 
     data object OnFetchModels : ChatUiEvent
 
-    data object OnCreateNewConversation : ChatUiEvent
+    data object OnNewChat : ChatUiEvent
 
     data class OnConversationSelected(val conversation: Conversation) : ChatUiEvent
 
-    data object OnLoadConversations : ChatUiEvent
-
     data object OnWebSearchTapped : ChatUiEvent
 
+    data class OnUpdateConversation(val conversation: Conversation) : ChatUiEvent
+
+    data class OnDeleteConversation(val conversation: Conversation) : ChatUiEvent
+
     data class OnReason(val reason: Reason) : ChatUiEvent
+
+    data class OnConversationFilterSelected(val filter: ConversationFilter) : ChatUiEvent
 }

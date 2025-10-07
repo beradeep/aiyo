@@ -10,16 +10,17 @@ import com.mikepenz.markdown.model.State
 data class ChatUiState(
     val models: List<Model>,
     val selectedModel: Model,
-    val selectedConversationId: String?,
+    val selectedConversation: Conversation?,
     val streamingResponse: String?,
     val isLoadingResponse: Boolean,
+    val isFetchingModels: Boolean,
     val apiKey: String?,
     val inputText: String,
-    val maxPreload: Int,
     val isWebSearchEnabled: Boolean,
     val reasoningEffort: Reason,
     val messages: List<UiMessage>,
-    val conversations: List<Conversation>
+    val conversations: List<Conversation>,
+    val conversationFilter: ConversationFilter
 ) {
     val isStreamingResponse
         get() = streamingResponse != null
@@ -30,16 +31,17 @@ data class ChatUiState(
             ChatUiState(
                 models = listOf(defaultModel),
                 selectedModel = defaultModel,
-                selectedConversationId = null,
+                selectedConversation = null,
                 streamingResponse = null,
                 isLoadingResponse = false,
+                isFetchingModels = false,
                 apiKey = "apiKey",
                 inputText = "",
-                maxPreload = 3,
                 isWebSearchEnabled = false,
                 reasoningEffort = Reason.None,
                 messages = emptyList(),
-                conversations = emptyList()
+                conversations = emptyList(),
+                conversationFilter = ConversationFilter.RECENT
             )
     }
 }

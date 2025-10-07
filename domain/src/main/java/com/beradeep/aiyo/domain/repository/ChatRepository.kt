@@ -30,7 +30,9 @@ interface ChatRepository {
 
     suspend fun getConversations(): List<Conversation>
 
-    suspend fun createConversation(title: String): Conversation
+    fun getConversationsFlow(): Flow<List<Conversation>>
+
+    suspend fun createConversation(title: String, model: Model = Model("openrouter/auto"), isStarred: Boolean = false): Conversation
 
     suspend fun updateConversation(conversation: Conversation)
 
