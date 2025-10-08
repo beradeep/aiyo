@@ -13,6 +13,7 @@ import com.beradeep.aiyo.domain.model.Model
 import com.beradeep.aiyo.domain.model.Role
 import com.beradeep.aiyo.domain.repository.ApiKeyRepository
 import com.beradeep.aiyo.domain.repository.ChatRepository
+import com.beradeep.aiyo.domain.repository.ModelRepository
 import com.mikepenz.markdown.model.parseMarkdownFlow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -32,6 +33,7 @@ import java.util.UUID
 open class ChatViewModel(
     private val apiKeyRepository: ApiKeyRepository,
     private val chatRepository: ChatRepository,
+    private val modelRepository: ModelRepository,
     private val apiClient: ApiClient
 ) : ViewModel() {
     private val messages = mutableStateListOf<UiMessage>()
@@ -40,6 +42,8 @@ open class ChatViewModel(
     private val _uiState = MutableStateFlow(ChatUiState.Default)
 
     private val messagesFlow = snapshotFlow { messages.toList() }
+
+    private var defaultModel = Model("openrouter/auto")
 
     val uiState =
         combine(
@@ -56,6 +60,7 @@ open class ChatViewModel(
             )
         }.onStart {
             loadApiKey()
+            loadDefaultModel()
             fetchModels()
         }.stateIn(
             viewModelScope,
@@ -73,35 +78,23 @@ open class ChatViewModel(
             is ChatUiEvent.OnPreloadMarkdownRequest -> preloadMarkdownForIndex(chatUiEvent.index)
             is ChatUiEvent.OnCancelPreloadMarkdownJobs -> cancelExistingPreloadJobs()
             is ChatUiEvent.OnFetchModels -> viewModelScope.launch { fetchModels() }
-            is ChatUiEvent.OnModelSelected -> selectModel(chatUiEvent.model)
-            is ChatUiEvent.OnConversationSelected ->
-                viewModelScope.launch {
-                    selectConversation(
-                        chatUiEvent.conversation
-                    )
-                }
-
-            is ChatUiEvent.OnNewChat -> {
-                _uiState.update { it.copy(selectedConversation = null) }
-                messages.clear()
+            is ChatUiEvent.OnModelSelected -> viewModelScope.launch { selectModel(chatUiEvent.model) }
+            is ChatUiEvent.OnConversationSelected -> viewModelScope.launch {
+                selectConversation(chatUiEvent.conversation)
             }
-
+            is ChatUiEvent.OnNewChat -> newChat()
             ChatUiEvent.OnWebSearchTapped -> _uiState.update {
                 it.copy(isWebSearchEnabled = !it.isWebSearchEnabled)
             }
-
             is ChatUiEvent.OnReason -> _uiState.update {
                 it.copy(reasoningEffort = chatUiEvent.reason)
             }
-
             is ChatUiEvent.OnDeleteConversation -> viewModelScope.launch {
                 deleteConversation(chatUiEvent.conversation)
             }
-
             is ChatUiEvent.OnUpdateConversation -> viewModelScope.launch {
                 updateConversation(chatUiEvent.conversation)
             }
-
             is ChatUiEvent.OnConversationFilterSelected -> _uiState.update {
                 it.copy(conversationFilter = chatUiEvent.filter)
             }
@@ -119,6 +112,13 @@ open class ChatViewModel(
 
     private fun loadApiKey() {
         _uiState.update { it.copy(apiKey = apiKeyRepository.getApiKey()) }
+    }
+
+    private fun loadDefaultModel() {
+        viewModelScope.launch {
+            defaultModel = modelRepository.getDefaultModel()
+            _uiState.update { it.copy(selectedModel = defaultModel) }
+        }
     }
 
     private fun setApiKey(key: String) {
@@ -236,23 +236,45 @@ open class ChatViewModel(
         return conversations.find { it.id.toString() == conversationId }
     }
 
-    private suspend fun fetchModels() {
-        _uiState.update { it.copy(isFetchingModels = true) }
-        chatRepository
-            .getModels(_uiState.value.apiKey)
-            .onSuccess { models -> _uiState.update { it.copy(models = models) } }
-        _uiState.update { it.copy(isFetchingModels = false) }
+    private fun fetchModels() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _uiState.update { it.copy(isFetchingModels = true) }
+            modelRepository
+                .getModels(_uiState.value.apiKey)
+                .onSuccess { models ->
+                    _uiState.update { it.copy(models = models) }
+                    // Update selected model if it's not set or not in the list
+                    val currentSelected = _uiState.value.selectedModel
+                    val newSelected = if (!models.contains(currentSelected)) {
+                        models.firstOrNull() ?: currentSelected
+                    } else {
+                        currentSelected
+                    }
+                    modelRepository.setDefaultModel(newSelected)
+                    loadDefaultModel()
+                }
+            _uiState.update { it.copy(isFetchingModels = false) }
+        }
     }
 
-    private fun selectModel(model: Model) {
+    private suspend fun selectModel(model: Model) {
         _uiState.update { it.copy(selectedModel = model) }
+        uiState.value.selectedConversation?.let {
+            updateConversation(it.copy(selectedModel = model))
+        }
+    }
+
+    private fun newChat() {
+        _uiState.update { it.copy(selectedConversation = null, selectedModel = defaultModel) }
+        messages.clear()
     }
 
     private suspend fun createNewConversation(title: String? = null) {
         cancelExistingPreloadJobs()
 
         val title = title ?: "Untitled: ${DateFormat.getDateTimeInstance().format(Date())}"
-        val conversation = chatRepository.createConversation(title)
+        val conversation =
+            chatRepository.createConversation(title = title, model = uiState.value.selectedModel)
         selectConversation(conversation)
     }
 
@@ -260,7 +282,12 @@ open class ChatViewModel(
         // Cancel existing preload jobs before switching conversations
         cancelExistingPreloadJobs()
 
-        _uiState.update { it.copy(selectedConversation = conversation, selectedModel = conversation.selectedModel) }
+        _uiState.update {
+            it.copy(
+                selectedConversation = conversation,
+                selectedModel = conversation.selectedModel
+            )
+        }
         messages.clear()
         messages.addAll(chatRepository.getMessages(conversation.id).map { it.toUiMessage() })
 
@@ -273,10 +300,6 @@ open class ChatViewModel(
         chatRepository.deleteMessages(conversation.id)
         chatRepository.deleteConversation(conversation.id)
         messages.clear()
-    }
-
-    private suspend fun starConversation(conversation: Conversation) {
-        chatRepository.updateConversation(conversation.copy(isStarred = true))
     }
 
     private fun parseMarkdownForIndex(index: Int): Job? {

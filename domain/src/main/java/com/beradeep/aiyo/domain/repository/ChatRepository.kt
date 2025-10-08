@@ -26,8 +26,6 @@ interface ChatRepository {
         apiKey: String? = null
     ): Result<Flow<String>>
 
-    suspend fun getModels(apiKey: String? = null): Result<List<Model>>
-
     suspend fun getConversations(): List<Conversation>
 
     fun getConversationsFlow(): Flow<List<Conversation>>

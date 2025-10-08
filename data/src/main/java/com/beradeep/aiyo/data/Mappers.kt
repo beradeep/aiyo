@@ -2,8 +2,9 @@ package com.beradeep.aiyo.data
 
 import com.aallam.openai.api.chat.ChatMessage
 import com.aallam.openai.api.chat.ChatRole
-import com.beradeep.aiyo.data.local.entity.ConversationEntity
-import com.beradeep.aiyo.data.local.entity.MessageEntity
+import com.beradeep.aiyo.data.local.db.entity.ConversationEntity
+import com.beradeep.aiyo.data.local.db.entity.MessageEntity
+import com.beradeep.aiyo.data.local.kv.entity.ModelEntity
 import com.beradeep.aiyo.domain.model.Conversation
 import com.beradeep.aiyo.domain.model.Message
 import com.beradeep.aiyo.domain.model.Model
@@ -67,4 +68,16 @@ fun Message.toEntity(conversationId: UUID): MessageEntity = MessageEntity(
     role = role.name,
     content = content,
     timestamp = System.currentTimeMillis()
+)
+
+fun ModelEntity.toDomain(): Model = Model(
+    id = id,
+    createdAt = createdAt,
+    ownedBy = ownedBy
+)
+
+fun Model.toEntity(): ModelEntity = ModelEntity(
+    id = id,
+    createdAt = createdAt,
+    ownedBy = ownedBy
 )

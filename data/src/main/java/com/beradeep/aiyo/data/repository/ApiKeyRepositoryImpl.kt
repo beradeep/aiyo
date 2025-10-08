@@ -1,7 +1,7 @@
 package com.beradeep.aiyo.data.repository
 
 import android.content.Context
-import com.beradeep.aiyo.data.local.KVStore
+import com.beradeep.aiyo.data.local.kv.KVStore
 import com.beradeep.aiyo.domain.repository.ApiKeyRepository
 
 class ApiKeyRepositoryImpl(context: Context) : ApiKeyRepository {

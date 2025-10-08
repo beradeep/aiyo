@@ -9,8 +9,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.beradeep.aiyo.ui.LocalTypography
-import com.beradeep.aiyo.ui.components.Text
-import com.beradeep.aiyo.ui.components.card.Card
+import com.beradeep.aiyo.ui.basics.components.Text
+import com.beradeep.aiyo.ui.basics.components.card.Card
 import com.beradeep.aiyo.ui.markdownColor
 import com.beradeep.aiyo.ui.markdownTypography
 import com.mikepenz.markdown.compose.Markdown

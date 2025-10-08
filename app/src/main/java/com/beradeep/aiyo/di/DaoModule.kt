@@ -1,8 +1,8 @@
 package com.beradeep.aiyo.di
 
-import com.beradeep.aiyo.data.local.AiyoDatabase
-import com.beradeep.aiyo.data.local.dao.ConversationDao
-import com.beradeep.aiyo.data.local.dao.MessageDao
+import com.beradeep.aiyo.data.local.db.AiyoDatabase
+import com.beradeep.aiyo.data.local.db.dao.ConversationDao
+import com.beradeep.aiyo.data.local.db.dao.MessageDao
 import dagger.Module
 import dagger.Provides
 import dagger.Reusable

@@ -1,7 +1,7 @@
 package com.beradeep.aiyo.ui.screens.chat.components
 
 import androidx.compose.runtime.Composable
-import com.beradeep.aiyo.ui.components.AlertDialog
+import com.beradeep.aiyo.ui.basics.components.AlertDialog
 
 @Composable
 fun DeleteConversationDialog(

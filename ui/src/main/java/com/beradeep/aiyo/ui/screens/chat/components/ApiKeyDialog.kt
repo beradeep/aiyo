@@ -17,12 +17,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.beradeep.aiyo.ui.LocalTypography
-import com.beradeep.aiyo.ui.components.AlertDialog
-import com.beradeep.aiyo.ui.components.Button
-import com.beradeep.aiyo.ui.components.ButtonVariant
-import com.beradeep.aiyo.ui.components.Text
-import com.beradeep.aiyo.ui.components.card.Card
-import com.beradeep.aiyo.ui.components.textfield.OutlinedTextField
+import com.beradeep.aiyo.ui.basics.components.AlertDialog
+import com.beradeep.aiyo.ui.basics.components.Button
+import com.beradeep.aiyo.ui.basics.components.ButtonVariant
+import com.beradeep.aiyo.ui.basics.components.Text
+import com.beradeep.aiyo.ui.basics.components.card.Card
+import com.beradeep.aiyo.ui.basics.components.textfield.OutlinedTextField
 
 @Composable
 fun ApiKeyDialog(

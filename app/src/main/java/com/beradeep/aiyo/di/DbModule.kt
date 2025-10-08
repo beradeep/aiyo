@@ -1,7 +1,7 @@
 package com.beradeep.aiyo.di
 
 import android.content.Context
-import com.beradeep.aiyo.data.local.AiyoDatabase
+import com.beradeep.aiyo.data.local.db.AiyoDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

@@ -9,7 +9,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
-import com.beradeep.aiyo.ui.foundation.ripple
+import com.beradeep.aiyo.ui.basics.foundation.ripple
 
 object AiyoTheme {
     val colors: Colors

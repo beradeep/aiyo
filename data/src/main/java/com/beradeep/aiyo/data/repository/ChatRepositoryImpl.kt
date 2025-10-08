@@ -4,13 +4,12 @@ import com.aallam.openai.api.chat.ChatCompletionRequest
 import com.aallam.openai.api.chat.Effort
 import com.aallam.openai.api.chat.StreamOptions
 import com.aallam.openai.api.model.ModelId
-import com.beradeep.aiyo.data.local.dao.ConversationDao
-import com.beradeep.aiyo.data.local.dao.MessageDao
+import com.beradeep.aiyo.data.local.db.dao.ConversationDao
+import com.beradeep.aiyo.data.local.db.dao.MessageDao
 import com.beradeep.aiyo.data.remote.DataApiClient
 import com.beradeep.aiyo.data.toChatMessage
 import com.beradeep.aiyo.data.toDomain
 import com.beradeep.aiyo.data.toEntity
-import com.beradeep.aiyo.data.toModel
 import com.beradeep.aiyo.domain.model.Conversation
 import com.beradeep.aiyo.domain.model.Message
 import com.beradeep.aiyo.domain.model.Model
@@ -29,12 +28,6 @@ class ChatRepositoryImpl(
     private val apiClient: DataApiClient
 ) : ChatRepository {
     private val openAi get() = apiClient.openAI
-
-    override suspend fun getModels(apiKey: String?): Result<List<Model>> = openAi?.let { client ->
-        safeCall {
-            client.models().map(com.aallam.openai.api.model.Model::toModel)
-        }
-    } ?: Result.failure(IllegalStateException("OpenAI client not initialized"))
 
     override suspend fun getCompletion(
         model: Model,
@@ -148,5 +141,5 @@ class ChatRepositoryImpl(
         messageDao.deleteMessagesByConversation(conversationId)
     }
 
-    suspend fun <T> safeCall(call: suspend () -> T): Result<T> = runCatching { call() }
+    private suspend fun <T> safeCall(call: suspend () -> T): Result<T> = runCatching { call() }
 }

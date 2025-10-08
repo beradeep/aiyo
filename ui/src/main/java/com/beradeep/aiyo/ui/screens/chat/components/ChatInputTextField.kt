@@ -21,15 +21,15 @@ import androidx.compose.ui.unit.dp
 import com.beradeep.aiyo.domain.model.Reason
 import com.beradeep.aiyo.ui.LocalColors
 import com.beradeep.aiyo.ui.R
-import com.beradeep.aiyo.ui.components.Icon
-import com.beradeep.aiyo.ui.components.IconButton
-import com.beradeep.aiyo.ui.components.IconButtonVariant
-import com.beradeep.aiyo.ui.components.Text
-import com.beradeep.aiyo.ui.components.Tooltip
-import com.beradeep.aiyo.ui.components.TooltipBox
-import com.beradeep.aiyo.ui.components.rememberTooltipPositionProvider
-import com.beradeep.aiyo.ui.components.rememberTooltipState
-import com.beradeep.aiyo.ui.components.textfield.TextField
+import com.beradeep.aiyo.ui.basics.components.Icon
+import com.beradeep.aiyo.ui.basics.components.IconButton
+import com.beradeep.aiyo.ui.basics.components.IconButtonVariant
+import com.beradeep.aiyo.ui.basics.components.Text
+import com.beradeep.aiyo.ui.basics.components.Tooltip
+import com.beradeep.aiyo.ui.basics.components.TooltipBox
+import com.beradeep.aiyo.ui.basics.components.rememberTooltipPositionProvider
+import com.beradeep.aiyo.ui.basics.components.rememberTooltipState
+import com.beradeep.aiyo.ui.basics.components.textfield.TextField
 import kotlinx.coroutines.launch
 
 @Composable
@@ -50,6 +50,7 @@ fun RowScope.ChatInputTextField(
         onValueChange = onValueChange,
         modifier = modifier.weight(1f),
         singleLine = false,
+        maxLines = 3,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default),
         leadingIcon = {
             Row {

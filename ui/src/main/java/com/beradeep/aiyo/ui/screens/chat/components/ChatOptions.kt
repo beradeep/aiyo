@@ -22,13 +22,13 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.beradeep.aiyo.domain.model.Conversation
 import com.beradeep.aiyo.ui.LocalColors
-import com.beradeep.aiyo.ui.components.Icon
-import com.beradeep.aiyo.ui.components.IconButton
-import com.beradeep.aiyo.ui.components.IconButtonVariant
-import com.beradeep.aiyo.ui.components.Text
-import com.beradeep.aiyo.ui.components.Tooltip
-import com.beradeep.aiyo.ui.components.TooltipBox
-import com.beradeep.aiyo.ui.components.rememberTooltipState
+import com.beradeep.aiyo.ui.basics.components.Icon
+import com.beradeep.aiyo.ui.basics.components.IconButton
+import com.beradeep.aiyo.ui.basics.components.IconButtonVariant
+import com.beradeep.aiyo.ui.basics.components.Text
+import com.beradeep.aiyo.ui.basics.components.Tooltip
+import com.beradeep.aiyo.ui.basics.components.TooltipBox
+import com.beradeep.aiyo.ui.basics.components.rememberTooltipState
 import kotlinx.coroutines.launch
 
 @Composable

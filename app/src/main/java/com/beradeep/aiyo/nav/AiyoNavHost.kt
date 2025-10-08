@@ -7,7 +7,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.beradeep.aiyo.di.ChatViewModelImpl
+import com.beradeep.aiyo.di.SettingsViewModelImpl
 import com.beradeep.aiyo.ui.screens.chat.ChatScreen
+import com.beradeep.aiyo.ui.screens.settings.SettingsScreen
 
 @Composable
 fun AiyoNavHost(modifier: Modifier = Modifier) {
@@ -20,7 +22,15 @@ fun AiyoNavHost(modifier: Modifier = Modifier) {
     ) {
         composable(Screen.ChatScreen.route) {
             val vm: ChatViewModelImpl = hiltViewModel()
-            ChatScreen(vm)
+            ChatScreen(vm, onNavigateToSettings = {
+                navController.navigate(Screen.SettingsScreen.route)
+            })
+        }
+        composable(Screen.SettingsScreen.route) {
+            val vm: SettingsViewModelImpl = hiltViewModel()
+            SettingsScreen(vm, onNavigateBack = {
+                navController.popBackStack()
+            })
         }
     }
 }

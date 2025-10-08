@@ -21,8 +21,8 @@ import androidx.compose.ui.unit.dp
 import com.beradeep.aiyo.domain.model.Conversation
 import com.beradeep.aiyo.ui.LocalColors
 import com.beradeep.aiyo.ui.LocalTypography
-import com.beradeep.aiyo.ui.components.Surface
-import com.beradeep.aiyo.ui.components.Text
+import com.beradeep.aiyo.ui.basics.components.Surface
+import com.beradeep.aiyo.ui.basics.components.Text
 import com.beradeep.aiyo.ui.screens.chat.ConversationFilter
 import com.beradeep.aiyo.ui.screens.chat.ListAutoScrollToTop
 
@@ -43,8 +43,10 @@ fun ColumnScope.ConversationList(
         onFilterSelected = onConversationFilterSelected,
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
     )
-    Spacer(Modifier.height(16.dp))
+    Spacer(Modifier.height(8.dp))
+
     ListAutoScrollToTop(0, lazyListState)
+
     LazyColumn(modifier = modifier, state = lazyListState) {
         items(conversations, key = { it.id }) { conversation ->
             Surface(

@@ -19,9 +19,9 @@ import androidx.compose.ui.unit.dp
 import com.beradeep.aiyo.domain.model.Model
 import com.beradeep.aiyo.ui.LocalColors
 import com.beradeep.aiyo.ui.LocalTypography
-import com.beradeep.aiyo.ui.components.ElevatedChip
-import com.beradeep.aiyo.ui.components.Icon
-import com.beradeep.aiyo.ui.components.Text
+import com.beradeep.aiyo.ui.basics.components.ElevatedChip
+import com.beradeep.aiyo.ui.basics.components.Icon
+import com.beradeep.aiyo.ui.basics.components.Text
 
 @Composable
 fun ModelSelectorChip(model: Model, onClick: () -> Unit) {

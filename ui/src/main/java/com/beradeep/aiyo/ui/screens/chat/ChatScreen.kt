@@ -1,6 +1,7 @@
 package com.beradeep.aiyo.ui.screens.chat
 
 import android.content.ClipData
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,6 +27,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Chat
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ModalDrawerSheet
@@ -56,17 +58,18 @@ import androidx.compose.ui.window.PopupPositionProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.beradeep.aiyo.ui.LocalColors
 import com.beradeep.aiyo.ui.LocalTypography
-import com.beradeep.aiyo.ui.components.Button
-import com.beradeep.aiyo.ui.components.ButtonVariant
-import com.beradeep.aiyo.ui.components.Icon
-import com.beradeep.aiyo.ui.components.IconButton
-import com.beradeep.aiyo.ui.components.IconButtonVariant
-import com.beradeep.aiyo.ui.components.Scaffold
-import com.beradeep.aiyo.ui.components.Text
-import com.beradeep.aiyo.ui.components.Tooltip
-import com.beradeep.aiyo.ui.components.TooltipBox
-import com.beradeep.aiyo.ui.components.rememberTooltipState
-import com.beradeep.aiyo.ui.components.topbar.TopBar
+import com.beradeep.aiyo.ui.basics.components.Button
+import com.beradeep.aiyo.ui.basics.components.ButtonVariant
+import com.beradeep.aiyo.ui.basics.components.HorizontalDivider
+import com.beradeep.aiyo.ui.basics.components.Icon
+import com.beradeep.aiyo.ui.basics.components.IconButton
+import com.beradeep.aiyo.ui.basics.components.IconButtonVariant
+import com.beradeep.aiyo.ui.basics.components.Scaffold
+import com.beradeep.aiyo.ui.basics.components.Text
+import com.beradeep.aiyo.ui.basics.components.Tooltip
+import com.beradeep.aiyo.ui.basics.components.TooltipBox
+import com.beradeep.aiyo.ui.basics.components.rememberTooltipState
+import com.beradeep.aiyo.ui.basics.components.topbar.TopBar
 import com.beradeep.aiyo.ui.screens.chat.components.ApiKeyDialog
 import com.beradeep.aiyo.ui.screens.chat.components.ChatInputTextField
 import com.beradeep.aiyo.ui.screens.chat.components.ChatOptions
@@ -74,19 +77,20 @@ import com.beradeep.aiyo.ui.screens.chat.components.ConversationList
 import com.beradeep.aiyo.ui.screens.chat.components.DeleteConversationDialog
 import com.beradeep.aiyo.ui.screens.chat.components.DotsTyping
 import com.beradeep.aiyo.ui.screens.chat.components.MessageBubble
-import com.beradeep.aiyo.ui.screens.chat.components.ModelSelectionSheet
 import com.beradeep.aiyo.ui.screens.chat.components.ModelSelectorChip
 import com.beradeep.aiyo.ui.screens.chat.components.RenameConversationDialog
+import com.beradeep.aiyo.ui.screens.components.ModelSelectionSheet
 import com.mikepenz.markdown.model.State
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
-fun ChatScreen(viewModel: ChatViewModel) {
+fun ChatScreen(viewModel: ChatViewModel, onNavigateToSettings: () -> Unit) {
     val chatUiState by viewModel.uiState.collectAsStateWithLifecycle()
     ChatScreen(
         uiState = chatUiState,
-        onUiEvent = viewModel::onUiEvent
+        onUiEvent = viewModel::onUiEvent,
+        onNavigateToSettings = onNavigateToSettings
     )
 }
 
@@ -95,7 +99,8 @@ fun ChatScreen(viewModel: ChatViewModel) {
 private fun ChatScreen(
     modifier: Modifier = Modifier,
     uiState: ChatUiState,
-    onUiEvent: (ChatUiEvent) -> Unit
+    onUiEvent: (ChatUiEvent) -> Unit,
+    onNavigateToSettings: () -> Unit
 ) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
@@ -145,6 +150,36 @@ private fun ChatScreen(
                             onUiEvent(ChatUiEvent.OnConversationFilterSelected(filter))
                         }
                     )
+
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        color = LocalColors.current.disabled
+                    )
+
+                    Column(
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                coroutineScope.launch {
+                                    drawerState.close()
+                                    onNavigateToSettings()
+                                }
+                            }
+                    ) {
+                        Spacer(Modifier.height(24.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("Settings", style = LocalTypography.current.h4)
+                            Icon(Icons.Filled.Settings)
+                        }
+                        Spacer(Modifier.height(24.dp))
+                    }
                 }
             }
         }
