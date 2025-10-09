@@ -101,7 +101,7 @@ fun RowScope.ChatInputTextField(
                         onClick = { scope.launch { tooltipState.show() } }
                     ) {
                         Icon(
-                            painter = painterResource(R.drawable.neurology_24px),
+                            painter = painterResource(R.drawable.cognition_24px),
                             tint =
                             if (reasonEffort != Reason.None) {
                                 LocalColors.current.tertiary

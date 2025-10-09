@@ -43,7 +43,7 @@ open class ChatViewModel(
 
     private val messagesFlow = snapshotFlow { messages.toList() }
 
-    private var defaultModel = Model("openrouter/auto")
+    private var defaultModel = Model.defaultModel
 
     val uiState =
         combine(

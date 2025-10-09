@@ -26,7 +26,7 @@ data class ChatUiState(
         get() = streamingResponse != null
 
     companion object {
-        val defaultModel = Model("openrouter/auto")
+        val defaultModel = Model.defaultModel
         val Default =
             ChatUiState(
                 models = listOf(defaultModel),

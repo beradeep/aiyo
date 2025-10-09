@@ -10,7 +10,7 @@ data class SettingsUiState(
     val showModelSelectionSheet: Boolean
 ) {
     companion object {
-        val defaultModel = Model("openrouter/auto")
+        val defaultModel = Model.defaultModel
         val Default = SettingsUiState(
             apiKey = null,
             models = listOf(defaultModel),

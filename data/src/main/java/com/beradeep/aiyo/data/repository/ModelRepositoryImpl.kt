@@ -28,9 +28,9 @@ class ModelRepositoryImpl(context: Context, val apiClient: DataApiClient) : Mode
             try {
                 json.decodeFromString<ModelEntity>(it).toDomain()
             } catch (_: Throwable) {
-                Model(DEFAULT_MODEL_IF_NONE_SET)
+                Model.defaultModel
             }
-        } ?: Model(DEFAULT_MODEL_IF_NONE_SET)
+        } ?: Model.defaultModel
     }
 
     override fun setDefaultModel(model: Model) {
@@ -42,6 +42,5 @@ class ModelRepositoryImpl(context: Context, val apiClient: DataApiClient) : Mode
 
     companion object {
         private const val KEY_DEFAULT_MODEL = "default_model"
-        private const val DEFAULT_MODEL_IF_NONE_SET = "openrouter/auto"
     }
 }
