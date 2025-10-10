@@ -12,9 +12,7 @@ Aiyo is an AI chat app that allows you to chat with hundreds of models by bringi
 - 🔒 Privacy-respectful: no call data is collected by Aiyo
 
 ## Installation
-
-### F-Droid
-Aiyo will soon be available on F-Droid.
+<a href="https://f-droid.org/en/packages/com.beradeep.aiyo/"><img height="100" src="https://github.com/user-attachments/assets/65b70711-9d16-4334-bf3d-4b2872495c25" /></a>
 
 ### Building from Source
 1. Clone the repository
