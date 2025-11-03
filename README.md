@@ -9,7 +9,7 @@ Aiyo is an AI chat app that allows you to chat with hundreds of models by bringi
 - 💬 Chat with any model of your choice
 - ✨ Access to over 500 models on OpenRouter
 - 🧠 Supports reasoning, web-search 🌐, and chat history 📜
-- 🔒 Privacy-respectful: no call data is collected by Aiyo
+- 🔒 Privacy-respectful: no data is collected by Aiyo
 
 ## Installation
 <a href="https://f-droid.org/en/packages/com.beradeep.aiyo/"><img height="100" src="https://github.com/user-attachments/assets/65b70711-9d16-4334-bf3d-4b2872495c25" /></a>
