@@ -21,7 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.beradeep.aiyo.domain.model.Conversation
-import com.beradeep.aiyo.ui.LocalColors
+import com.beradeep.aiyo.ui.AiyoTheme
 import com.beradeep.aiyo.ui.basics.components.Icon
 import com.beradeep.aiyo.ui.basics.components.IconButton
 import com.beradeep.aiyo.ui.basics.components.IconButtonVariant
@@ -114,7 +114,7 @@ fun ChatOptions(
                             Text("Delete")
                             Icon(
                                 Icons.Outlined.Delete,
-                                tint = LocalColors.current.error
+                                tint = AiyoTheme.colors.error
                             )
                         }
                         Spacer(Modifier.height(16.dp))

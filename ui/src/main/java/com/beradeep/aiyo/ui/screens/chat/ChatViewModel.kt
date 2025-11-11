@@ -17,11 +17,13 @@ import com.beradeep.aiyo.domain.repository.ModelRepository
 import com.mikepenz.markdown.model.parseMarkdownFlow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -69,6 +71,7 @@ open class ChatViewModel(
         )
 
     private val preloadJobs = mutableIntObjectMapOf<Job>()
+    private var responseJob: Job? = null
 
     fun onUiEvent(chatUiEvent: ChatUiEvent) {
         when (chatUiEvent) {
@@ -82,23 +85,40 @@ open class ChatViewModel(
             is ChatUiEvent.OnConversationSelected -> viewModelScope.launch {
                 selectConversation(chatUiEvent.conversation)
             }
+
             is ChatUiEvent.OnNewChat -> newChat()
             ChatUiEvent.OnWebSearchTapped -> _uiState.update {
                 it.copy(isWebSearchEnabled = !it.isWebSearchEnabled)
             }
+
             is ChatUiEvent.OnReason -> _uiState.update {
                 it.copy(reasoningEffort = chatUiEvent.reason)
             }
+
             is ChatUiEvent.OnDeleteConversation -> viewModelScope.launch {
                 deleteConversation(chatUiEvent.conversation)
             }
+
             is ChatUiEvent.OnUpdateConversation -> viewModelScope.launch {
                 updateConversation(chatUiEvent.conversation)
             }
+
             is ChatUiEvent.OnConversationFilterSelected -> _uiState.update {
                 it.copy(conversationFilter = chatUiEvent.filter)
             }
+
+            ChatUiEvent.OnStopRequest -> viewModelScope.launch { stopRequest() }
         }
+    }
+
+    private suspend fun stopRequest() {
+        responseJob?.cancelAndJoin()
+        responseJob = null
+        val message = Message(UUID.randomUUID(), Role.System, "_Request interrupted by user._")
+        messages.add(message.toUiMessage())
+        saveMessage(message)
+        preloadMarkdownForIndex(messages.lastIndex)
+        _uiState.update { it.copy(isLoadingResponse = false, streamingResponse = null) }
     }
 
     private suspend fun updateConversation(conversation: Conversation) {
@@ -143,60 +163,61 @@ open class ChatViewModel(
 
         val apiKey = uiState.value.apiKey
         if (apiKey.isNullOrBlank()) {
-            messages.add(
-                UiMessage(
-                    content = "API key is not set or invalid.",
-                    isUser = false,
-                    id = UUID.randomUUID().toString()
-                )
-            )
+            val message =
+                Message(UUID.randomUUID(), Role.System, "_API key is not set or invalid._")
+            messages.add(message.toUiMessage())
+            saveMessage(message)
+            preloadMarkdownForIndex(messages.lastIndex)
             return
         }
 
-        _uiState.update { it.copy(inputText = "") }
-
-        _uiState.update { it.copy(isLoadingResponse = true) }
-        val model =
-            uiState.value.selectedModel.takeIf { !uiState.value.isWebSearchEnabled }
-                ?: uiState.value.selectedModel.copy(id = uiState.value.selectedModel.id + ":online")
-        val result =
-            chatRepository.getChatCompletionFlow(
-                apiKey = apiKey,
-                model = model,
-                messages = messages.map(UiMessage::toMessage)
-            )
-
-        result
-            .onSuccess { chunkFlow ->
-                val response = StringBuilder("")
-                chunkFlow
-                    .collect { chunk ->
-                        response.append(chunk)
-                        _uiState.update {
-                            it.copy(
-                                streamingResponse = response.toString(),
-                                isLoadingResponse = false
-                            )
-                        }
-                    }
-                _uiState.update { it.copy(streamingResponse = null) }
-                val message = Message(UUID.randomUUID(), Role.Assistant, response.toString())
-                messages.add(message.toUiMessage())
-                saveMessage(message)
-                preloadMarkdownForIndex(messages.lastIndex)
-            }.onFailure { error ->
-                messages.add(
-                    UiMessage(
-                        isUser = false,
-                        content = error.message ?: "Oops. An unknown error occurred.",
-                        id = UUID.randomUUID().toString()
-                    )
+        _uiState.update { it.copy(inputText = "", isLoadingResponse = true) }
+        responseJob = viewModelScope.launch {
+            val model =
+                uiState.value.selectedModel.takeIf { !uiState.value.isWebSearchEnabled }
+                    ?: uiState.value.selectedModel.copy(id = uiState.value.selectedModel.id + ":online")
+            val result =
+                chatRepository.getChatCompletionFlow(
+                    apiKey = apiKey,
+                    model = model,
+                    messages = messages.map(UiMessage::toMessage)
                 )
-            }
-        _uiState.update { it.copy(isLoadingResponse = false) }
 
-        Log.d("ChatViewModel", "Updating conversation title...")
-        aiUpdateConversationTitle()
+            result
+                .onSuccess { chunkFlow ->
+                    val response = StringBuilder("")
+                    chunkFlow
+                        .onCompletion {
+                            _uiState.update { it.copy(streamingResponse = null) }
+                            val message =
+                                Message(UUID.randomUUID(), Role.Assistant, response.toString())
+                            messages.add(message.toUiMessage())
+                            saveMessage(message)
+                            preloadMarkdownForIndex(messages.lastIndex)
+                        }
+                        .collect { chunk ->
+                            response.append(chunk)
+                            if (response.isNotBlank()) {
+                                _uiState.update {
+                                    it.copy(
+                                        streamingResponse = response.toString(),
+                                        isLoadingResponse = false
+                                    )
+                                }
+                            }
+                        }
+                }.onFailure { error ->
+                    val content = "_${error.message ?: "_Oops. An unknown error occurred."}_"
+                    val message = Message(UUID.randomUUID(), Role.System, content)
+                    messages.add(message.toUiMessage())
+                    saveMessage(message)
+                    preloadMarkdownForIndex(messages.lastIndex)
+                }
+            _uiState.update { it.copy(streamingResponse = null, isLoadingResponse = false) }
+            aiUpdateConversationTitle()
+        }
+        responseJob?.join()
+        responseJob = null
     }
 
     private suspend fun aiUpdateConversationTitle() {

@@ -32,4 +32,6 @@ sealed interface ChatUiEvent {
     data class OnReason(val reason: Reason) : ChatUiEvent
 
     data class OnConversationFilterSelected(val filter: ConversationFilter) : ChatUiEvent
+
+    data object OnStopRequest : ChatUiEvent
 }

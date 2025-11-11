@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.beradeep.aiyo.domain.ApiClient
 import com.beradeep.aiyo.domain.model.Model
+import com.beradeep.aiyo.domain.model.ThemeType
 import com.beradeep.aiyo.domain.repository.ApiKeyRepository
 import com.beradeep.aiyo.domain.repository.ModelRepository
+import com.beradeep.aiyo.domain.repository.SettingRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -17,6 +19,7 @@ import kotlinx.coroutines.launch
 open class SettingsViewModel(
     private val apiKeyRepository: ApiKeyRepository,
     private val modelRepository: ModelRepository,
+    private val settingsRepository: SettingRepository,
     private val apiClient: ApiClient
 ) : ViewModel() {
 
@@ -37,13 +40,21 @@ open class SettingsViewModel(
             SettingsUiEvent.OnFetchModels -> fetchModels()
             SettingsUiEvent.OnShowModelSelectionSheet -> showModelSelectionSheet()
             SettingsUiEvent.OnDismissModelSelectionSheet -> dismissModelSelectionSheet()
+            is SettingsUiEvent.OnUpdateThemeType -> setThemeType(settingsUiEvent.themeType)
         }
     }
 
     private fun loadInitialState() {
+        loadThemeType()
         loadApiKey()
         loadDefaultModel()
         fetchModels()
+    }
+
+    private fun loadThemeType() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(themeType = settingsRepository.getThemeType()) }
+        }
     }
 
     private fun loadApiKey() {
@@ -56,6 +67,13 @@ open class SettingsViewModel(
         viewModelScope.launch {
             val savedModel = modelRepository.getDefaultModel()
             _uiState.update { it.copy(selectedModel = savedModel) }
+        }
+    }
+
+    private fun setThemeType(themeType: ThemeType) {
+        viewModelScope.launch {
+            settingsRepository.setThemeType(themeType)
+            _uiState.update { it.copy(themeType = themeType) }
         }
     }
 

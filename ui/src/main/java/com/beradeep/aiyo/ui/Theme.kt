@@ -7,14 +7,17 @@ import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import com.beradeep.aiyo.ui.basics.foundation.ripple
 
 object AiyoTheme {
     val colors: Colors
         @ReadOnlyComposable @Composable
-        get() = LocalColors.current
+        get() = LocalColors.current.value
 
     val typography: Typography
         @ReadOnlyComposable @Composable
@@ -26,14 +29,14 @@ fun AiyoTheme(isDarkTheme: Boolean = isSystemInDarkTheme(), content: @Composable
     val rippleIndication = ripple()
     val selectionColors = rememberTextSelectionColors(LightColors)
     val typography = provideTypography()
-    val colors = if (isDarkTheme) DarkColors else LightColors
+    val colors = remember(isDarkTheme) { mutableStateOf(if (isDarkTheme) DarkColors else LightColors) }
 
     CompositionLocalProvider(
         LocalColors provides colors,
         LocalTypography provides typography,
         LocalIndication provides rippleIndication,
         LocalTextSelectionColors provides selectionColors,
-        LocalContentColor provides colors.contentColorFor(colors.background),
+        LocalContentColor provides colors.value.contentColorFor(colors.value.background),
         LocalTextStyle provides typography.body1,
         content = content
     )

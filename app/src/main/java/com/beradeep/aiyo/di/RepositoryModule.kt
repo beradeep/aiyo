@@ -7,9 +7,11 @@ import com.beradeep.aiyo.data.remote.DataApiClient
 import com.beradeep.aiyo.data.repository.ApiKeyRepositoryImpl
 import com.beradeep.aiyo.data.repository.ChatRepositoryImpl
 import com.beradeep.aiyo.data.repository.ModelRepositoryImpl
+import com.beradeep.aiyo.data.repository.SettingRepositoryImpl
 import com.beradeep.aiyo.domain.repository.ApiKeyRepository
 import com.beradeep.aiyo.domain.repository.ChatRepository
 import com.beradeep.aiyo.domain.repository.ModelRepository
+import com.beradeep.aiyo.domain.repository.SettingRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -40,4 +42,10 @@ object RepositoryModule {
         apiClient: DataApiClient
     ): ModelRepository =
         ModelRepositoryImpl(context, apiClient)
+
+    @Provides
+    @Singleton
+    fun provideSettingsRepository(
+        @ApplicationContext context: Context
+    ): SettingRepository = SettingRepositoryImpl(context)
 }

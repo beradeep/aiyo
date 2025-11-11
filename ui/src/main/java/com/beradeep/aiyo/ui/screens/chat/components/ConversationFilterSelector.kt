@@ -11,7 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.beradeep.aiyo.ui.LocalColors
+import com.beradeep.aiyo.ui.AiyoTheme
 import com.beradeep.aiyo.ui.screens.chat.ConversationFilter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,10 +33,10 @@ fun ConversationFilterSelector(
                     count = ConversationFilter.entries.size
                 ),
                 colors = SegmentedButtonDefaults.colors(
-                    activeContainerColor = LocalColors.current.primary,
-                    activeContentColor = LocalColors.current.onPrimary,
-                    inactiveContainerColor = LocalColors.current.surface,
-                    inactiveContentColor = LocalColors.current.onSurface
+                    activeContainerColor = AiyoTheme.colors.primary,
+                    activeContentColor = AiyoTheme.colors.onPrimary,
+                    inactiveContainerColor = AiyoTheme.colors.surface,
+                    inactiveContentColor = AiyoTheme.colors.onSurface
                 )
             ) {
                 Text(

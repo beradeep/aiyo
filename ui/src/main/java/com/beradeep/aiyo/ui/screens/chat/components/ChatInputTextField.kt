@@ -1,5 +1,6 @@
 package com.beradeep.aiyo.ui.screens.chat.components
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,6 +12,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.rounded.StopCircle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -19,7 +21,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.beradeep.aiyo.domain.model.Reason
-import com.beradeep.aiyo.ui.LocalColors
+import com.beradeep.aiyo.ui.AiyoTheme
 import com.beradeep.aiyo.ui.R
 import com.beradeep.aiyo.ui.basics.components.Icon
 import com.beradeep.aiyo.ui.basics.components.IconButton
@@ -39,6 +41,7 @@ fun RowScope.ChatInputTextField(
     modifier: Modifier = Modifier,
     onValueChange: (String) -> Unit,
     onSend: () -> Unit,
+    onStopRequest: () -> Unit,
     onWebSearch: () -> Unit,
     onReason: (Reason) -> Unit,
     isWebSearchEnabled: Boolean,
@@ -63,9 +66,9 @@ fun RowScope.ChatInputTextField(
                         imageVector = Icons.Rounded.Language,
                         tint =
                         if (isWebSearchEnabled) {
-                            LocalColors.current.tertiary
+                            AiyoTheme.colors.tertiary
                         } else {
-                            LocalColors.current.primary
+                            AiyoTheme.colors.primary
                         }
                     )
                 }
@@ -104,9 +107,9 @@ fun RowScope.ChatInputTextField(
                             painter = painterResource(R.drawable.cognition_24px),
                             tint =
                             if (reasonEffort != Reason.None) {
-                                LocalColors.current.tertiary
+                                AiyoTheme.colors.tertiary
                             } else {
-                                LocalColors.current.primary
+                                AiyoTheme.colors.primary
                             }
                         )
                     }
@@ -114,13 +117,25 @@ fun RowScope.ChatInputTextField(
             }
         },
         trailingIcon = {
-            IconButton(
-                shape = CircleShape,
-                enabled = value.isNotBlank() && !isLoadingOrStreamingResponse,
-                variant = IconButtonVariant.PrimaryGhost,
-                onClick = onSend
-            ) {
-                Icon(Icons.AutoMirrored.Rounded.Send)
+            AnimatedContent(isLoadingOrStreamingResponse) { isLoading ->
+                when (!isLoading) {
+                    true -> IconButton(
+                        shape = CircleShape,
+                        enabled = value.isNotBlank(),
+                        variant = IconButtonVariant.PrimaryGhost,
+                        onClick = onSend
+                    ) {
+                        Icon(Icons.AutoMirrored.Rounded.Send)
+                    }
+
+                    false -> IconButton(
+                        shape = CircleShape,
+                        variant = IconButtonVariant.PrimaryGhost,
+                        onClick = onStopRequest
+                    ) {
+                        Icon(Icons.Rounded.StopCircle)
+                    }
+                }
             }
         },
         placeholder = { Text(text = "Type a message...") },

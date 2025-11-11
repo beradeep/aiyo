@@ -1,6 +1,7 @@
 package com.beradeep.aiyo.ui.screens.settings
 
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,14 +16,17 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.filled.InvertColors
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.ModelTraining
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,6 +41,10 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.beradeep.aiyo.domain.model.Model
+import com.beradeep.aiyo.domain.model.ThemeType
+import com.beradeep.aiyo.ui.AiyoTheme
+import com.beradeep.aiyo.ui.DarkColors
+import com.beradeep.aiyo.ui.LightColors
 import com.beradeep.aiyo.ui.LocalColors
 import com.beradeep.aiyo.ui.LocalTypography
 import com.beradeep.aiyo.ui.basics.components.HorizontalDivider
@@ -125,6 +133,25 @@ fun SettingsScreen(
                     }
                 )
             }
+
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp)
+            )
+
+            SettingsSection(
+                title = "Theme Configuration",
+                icon = Icons.Filled.InvertColors
+            ) {
+                ThemeSelectionSetting(
+                    modifier = Modifier.fillMaxWidth(),
+                    selectedThemeType = uiState.themeType,
+                    onUpdateThemeType = { newThemeType ->
+                        viewModel.onUiEvent(SettingsUiEvent.OnUpdateThemeType(newThemeType))
+                    }
+                )
+            }
         }
 
         ModelSelectionSheet(
@@ -162,7 +189,7 @@ private fun SettingsSection(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = LocalColors.current.primary,
+                tint = AiyoTheme.colors.primary,
                 modifier = Modifier.size(24.dp)
             )
             Text(
@@ -215,7 +242,8 @@ private fun ApiKeySetting(
                 supportingText = {
                     Text(
                         text = "Your API key is only stored locally on this device.",
-                        color = LocalColors.current.textSecondary
+                        color = AiyoTheme.colors.textSecondary,
+                        style = AiyoTheme.typography.body3
                     )
                 }
             )
@@ -237,12 +265,61 @@ private fun ModelSelectionSetting(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "Default Model",
-                style = LocalTypography.current.body1
-            )
+            Column {
+                Text(
+                    text = "Default Model",
+                    style = LocalTypography.current.body1
+                )
+                Text(
+                    text = "Requires app restart to apply change.",
+                    color = AiyoTheme.colors.textSecondary,
+                    style = AiyoTheme.typography.body3
+                )
+            }
             ModelSelectorChip(selectedModel, onShowModelSheet)
         }
         Spacer(modifier = Modifier.height(8.dp))
+    }
+}
+
+@Composable
+fun ThemeSelectionSetting(
+    modifier: Modifier = Modifier,
+    isDarkModeOn: Boolean = isSystemInDarkTheme(),
+    selectedThemeType: ThemeType,
+    onUpdateThemeType: (ThemeType) -> Unit
+) {
+    val colors by remember(selectedThemeType) {
+        derivedStateOf {
+            when (selectedThemeType) {
+                ThemeType.Light -> LightColors
+                ThemeType.Dark -> DarkColors
+                ThemeType.System -> if (isDarkModeOn) DarkColors else LightColors
+            }
+        }
+    }
+    LocalColors.current.value = colors
+    SingleChoiceSegmentedButtonRow(modifier) {
+        ThemeType.entries.forEach { themeType ->
+            SegmentedButton(
+                selected = themeType == selectedThemeType,
+                onClick = { onUpdateThemeType(themeType) },
+                shape = SegmentedButtonDefaults.itemShape(
+                    index = themeType.ordinal,
+                    count = ThemeType.entries.size
+                ),
+                colors = SegmentedButtonDefaults.colors(
+                    activeContainerColor = AiyoTheme.colors.primary,
+                    activeContentColor = AiyoTheme.colors.onPrimary,
+                    inactiveContainerColor = AiyoTheme.colors.surface,
+                    inactiveContentColor = AiyoTheme.colors.onSurface
+                )
+            ) {
+                androidx.compose.material3.Text(
+                    text = themeType.name,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.beradeep.aiyo.ui.screens.chat
 
 import android.content.ClipData
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
@@ -28,6 +30,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Chat
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ModalDrawerSheet
@@ -46,6 +49,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
@@ -56,8 +60,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastRoundToInt
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.beradeep.aiyo.ui.LocalColors
+import com.beradeep.aiyo.ui.AiyoTheme
 import com.beradeep.aiyo.ui.LocalTypography
+import com.beradeep.aiyo.ui.R
 import com.beradeep.aiyo.ui.basics.components.Button
 import com.beradeep.aiyo.ui.basics.components.ButtonVariant
 import com.beradeep.aiyo.ui.basics.components.HorizontalDivider
@@ -82,7 +87,6 @@ import com.beradeep.aiyo.ui.screens.chat.components.RenameConversationDialog
 import com.beradeep.aiyo.ui.screens.components.ModelSelectionSheet
 import com.mikepenz.markdown.model.State
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
 
 @Composable
 fun ChatScreen(viewModel: ChatViewModel, onNavigateToSettings: () -> Unit) {
@@ -110,8 +114,8 @@ private fun ChatScreen(
         drawerContent = {
             ModalDrawerSheet(
                 modifier = Modifier.fillMaxWidth(0.8f),
-                drawerContainerColor = LocalColors.current.surface,
-                drawerContentColor = LocalColors.current.onSurface
+                drawerContainerColor = AiyoTheme.colors.surface,
+                drawerContentColor = AiyoTheme.colors.onSurface
             ) {
                 Column(
                     Modifier.systemBarsPadding()
@@ -155,7 +159,7 @@ private fun ChatScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 8.dp),
-                        color = LocalColors.current.disabled
+                        color = AiyoTheme.colors.disabled
                     )
 
                     Column(
@@ -290,7 +294,11 @@ private fun ChatScreen(
                                                 tooltipState.dismiss()
                                             }
                                         ) {
-                                            Text(text = "Copy")
+                                            Row {
+                                                Icon(imageVector = Icons.Rounded.ContentCopy)
+                                                Spacer(Modifier.width(16.dp))
+                                                Text(text = "Copy")
+                                            }
                                         }
                                     }
                                 }
@@ -303,7 +311,7 @@ private fun ChatScreen(
                                                 onLongPress = { offset ->
                                                     scope.launch {
                                                         longPressX = offset.x.fastRoundToInt()
-                                                        longPressY = offset.y.roundToInt()
+                                                        longPressY = offset.y.fastRoundToInt()
                                                         tooltipState.show()
                                                     }
                                                 }
@@ -311,7 +319,7 @@ private fun ChatScreen(
                                         }
                                 ) {
                                     MessageBubble(
-                                        content = msg.content ?: "",
+                                        content = msg.content.toString(),
                                         isUser = msg.isUser,
                                         markdownState = msg.markdownState
                                     )
@@ -346,7 +354,8 @@ private fun ChatScreen(
                             isLoadingOrStreamingResponse =
                             uiState.isLoadingResponse || uiState.isStreamingResponse,
                             onReason = { onUiEvent(ChatUiEvent.OnReason(it)) },
-                            reasonEffort = uiState.reasoningEffort
+                            reasonEffort = uiState.reasoningEffort,
+                            onStopRequest = { onUiEvent(ChatUiEvent.OnStopRequest) }
                         )
                     }
                 }
@@ -357,16 +366,15 @@ private fun ChatScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.align(Alignment.Center)
                     ) {
-                        Text(
-                            text = "AIYO",
-                            style = LocalTypography.current.h1,
-                            color = LocalColors.current.textSecondary
+                        Image(
+                            modifier = Modifier.size(240.dp),
+                            painter = painterResource(id = R.drawable.aiyo_icon),
+                            contentDescription = "Aiyo Icon"
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Start a conversation",
-                            style = LocalTypography.current.body1,
-                            color = LocalColors.current.textDisabled,
+                            text = "Hello there! How can I assist you today?",
+                            style = AiyoTheme.typography.body1,
+                            color = AiyoTheme.colors.tertiary,
                             fontStyle = FontStyle.Italic
                         )
                     }

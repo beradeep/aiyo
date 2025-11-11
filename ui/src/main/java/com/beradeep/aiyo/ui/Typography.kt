@@ -166,7 +166,7 @@ fun markdownTypography(
             provideTypography()
                 .body3
                 .copy(
-                    color = LocalColors.current.tertiary,
+                    color = AiyoTheme.colors.tertiary,
                     fontWeight = FontWeight.Bold,
                     textDecoration = TextDecoration.Underline
                 ).toSpanStyle()

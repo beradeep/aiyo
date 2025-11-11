@@ -3,6 +3,7 @@ package com.beradeep.aiyo.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import com.mikepenz.markdown.model.DefaultMarkdownColors
@@ -142,7 +143,7 @@ internal val DarkColors =
         elevation = Gray200
     )
 
-val LocalColors = staticCompositionLocalOf { LightColors }
+val LocalColors = staticCompositionLocalOf { mutableStateOf(LightColors) }
 val LocalContentColor = compositionLocalOf { Color.Black }
 val LocalContentAlpha = compositionLocalOf { 1f }
 
@@ -160,11 +161,11 @@ fun Colors.contentColorFor(backgroundColor: Color): Color = when (backgroundColo
 
 @Composable
 fun markdownColor(
-    text: Color = LocalColors.current.text,
-    codeBackground: Color = LocalColors.current.onBackground.copy(alpha = 0.1f),
+    text: Color = AiyoTheme.colors.text,
+    codeBackground: Color = AiyoTheme.colors.onBackground.copy(alpha = 0.1f),
     inlineCodeBackground: Color = codeBackground,
     dividerColor: Color = AiyoTheme.colors.textDisabled,
-    tableBackground: Color = LocalColors.current.onBackground.copy(alpha = 0.02f)
+    tableBackground: Color = AiyoTheme.colors.onBackground.copy(alpha = 0.02f)
 ): MarkdownColors = DefaultMarkdownColors(
     text = text,
     codeBackground = codeBackground,

@@ -28,7 +28,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.unit.dp
 import com.beradeep.aiyo.domain.model.Model
-import com.beradeep.aiyo.ui.LocalColors
+import com.beradeep.aiyo.ui.AiyoTheme
 import com.beradeep.aiyo.ui.LocalTypography
 import com.beradeep.aiyo.ui.basics.components.Icon
 import com.beradeep.aiyo.ui.basics.components.ModalBottomSheet
@@ -95,7 +95,7 @@ fun ModelSelectionSheet(
                 ) { model ->
                     val isSelected = model.id == selectedModel.id
                     Surface(
-                        color = if (isSelected) LocalColors.current.surface else LocalColors.current.background
+                        color = if (isSelected) AiyoTheme.colors.surface else AiyoTheme.colors.background
                     ) {
                         Row(
                             modifier =

@@ -4,6 +4,7 @@ import com.beradeep.aiyo.domain.ApiClient
 import com.beradeep.aiyo.domain.repository.ApiKeyRepository
 import com.beradeep.aiyo.domain.repository.ChatRepository
 import com.beradeep.aiyo.domain.repository.ModelRepository
+import com.beradeep.aiyo.domain.repository.SettingRepository
 import com.beradeep.aiyo.ui.screens.chat.ChatViewModel
 import com.beradeep.aiyo.ui.screens.settings.SettingsViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,9 +31,11 @@ class SettingsViewModelImpl
 constructor(
     apiKeyRepository: ApiKeyRepository,
     apiClient: ApiClient,
-    modelRepository: ModelRepository
+    modelRepository: ModelRepository,
+    settingRepository: SettingRepository
 ) : SettingsViewModel(
     apiKeyRepository = apiKeyRepository,
     modelRepository = modelRepository,
+    settingsRepository = settingRepository,
     apiClient = apiClient
 )

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,7 +33,7 @@ fun MessageBubble(content: String, isUser: Boolean, markdownState: State) {
                 Modifier.fillMaxWidth()
             }
         if (isUser) {
-            Card(modifier) {
+            Card(modifier, shape = MessageBubbleDefaults.UserBubbleShape) {
                 Box(Modifier.padding(12.dp)) {
                     Text(text = content, style = LocalTypography.current.body1)
                 }
@@ -59,4 +60,19 @@ fun MessageBubble(content: String, isUser: Boolean, markdownState: State) {
             }
         }
     }
+}
+
+object MessageBubbleDefaults {
+
+    val userBubbleTopEnd = 4.dp
+    val userBubbleBottomEnd = 12.dp
+    val userBubbleTopStart = 12.dp
+    val userBubbleBottomStart = 12.dp
+
+    val UserBubbleShape = RoundedCornerShape(
+        topStart = userBubbleTopStart,
+        topEnd = userBubbleTopEnd,
+        bottomStart = userBubbleBottomStart,
+        bottomEnd = userBubbleBottomEnd
+    )
 }

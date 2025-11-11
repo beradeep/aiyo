@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.beradeep.aiyo.domain.model.Conversation
-import com.beradeep.aiyo.ui.LocalColors
+import com.beradeep.aiyo.ui.AiyoTheme
 import com.beradeep.aiyo.ui.LocalTypography
 import com.beradeep.aiyo.ui.basics.components.Surface
 import com.beradeep.aiyo.ui.basics.components.Text
@@ -53,9 +53,9 @@ fun ColumnScope.ConversationList(
                 modifier = Modifier.fillMaxWidth(),
                 color =
                 if (selectedConversation?.id == conversation.id) {
-                    LocalColors.current.background
+                    AiyoTheme.colors.background
                 } else {
-                    LocalColors.current.surface
+                    AiyoTheme.colors.surface
                 }
             ) {
                 Row(
@@ -75,9 +75,9 @@ fun ColumnScope.ConversationList(
                         overflow = TextOverflow.Ellipsis,
                         color =
                         if (selectedConversation?.id == conversation.id) {
-                            LocalColors.current.tertiary
+                            AiyoTheme.colors.tertiary
                         } else {
-                            LocalColors.current.primary
+                            AiyoTheme.colors.primary
                         }
                     )
                 }

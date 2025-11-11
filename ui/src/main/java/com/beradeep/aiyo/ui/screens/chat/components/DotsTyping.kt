@@ -19,7 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.beradeep.aiyo.ui.LocalColors
+import com.beradeep.aiyo.ui.AiyoTheme
 @Composable
 fun DotsTyping() {
     val maxOffset = 6f
@@ -30,7 +30,7 @@ fun DotsTyping() {
             .size(dotSize)
             .offset(y = -offset.dp)
             .background(
-                color = LocalColors.current.secondary,
+                color = AiyoTheme.colors.secondary,
                 shape = CircleShape
             )
     )
