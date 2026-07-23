@@ -5,13 +5,13 @@ import com.aallam.openai.api.chat.ChatRole
 import com.beradeep.aiyo.data.local.db.entity.ConversationEntity
 import com.beradeep.aiyo.data.local.db.entity.MessageEntity
 import com.beradeep.aiyo.data.local.kv.entity.ModelEntity
+import com.beradeep.aiyo.data.remote.OpenRouterModelDto
 import com.beradeep.aiyo.domain.model.Conversation
 import com.beradeep.aiyo.domain.model.Message
 import com.beradeep.aiyo.domain.model.Model
 import com.beradeep.aiyo.domain.model.Role
 import java.util.Date
 import java.util.UUID
-import com.aallam.openai.api.model.Model as OpenAIModel
 
 fun ChatMessage.toChatMessage(): Message = Message(
     role = this.role.toRole(),
@@ -32,11 +32,15 @@ fun Role.toChatRole(): ChatRole = when (this) {
     Role.System -> ChatRole.System
 }
 
-fun OpenAIModel.toModel(): Model = Model(
-    id = this.id.id,
-    createdAt = this.created?.let { Date(it) },
-    ownedBy = this.ownedBy
+fun OpenRouterModelDto.toModel(): Model = Model(
+    id = id,
+    createdAt = created?.let { Date(it * 1000) },
+    inputPricePerMillion = pricing?.prompt?.toPricePerMillion(),
+    outputPricePerMillion = pricing?.completion?.toPricePerMillion()
 )
+
+private fun String.toPricePerMillion(): Double? =
+    toDoubleOrNull()?.takeIf { it >= 0 }?.times(1_000_000)
 
 fun ConversationEntity.toDomain(): Conversation = Conversation(
     id = id,
@@ -73,11 +77,15 @@ fun Message.toEntity(conversationId: UUID): MessageEntity = MessageEntity(
 fun ModelEntity.toDomain(): Model = Model(
     id = id,
     createdAt = createdAt,
-    ownedBy = ownedBy
+    ownedBy = ownedBy,
+    inputPricePerMillion = inputPricePerMillion,
+    outputPricePerMillion = outputPricePerMillion
 )
 
 fun Model.toEntity(): ModelEntity = ModelEntity(
     id = id,
     createdAt = createdAt,
-    ownedBy = ownedBy
+    ownedBy = ownedBy,
+    inputPricePerMillion = inputPricePerMillion,
+    outputPricePerMillion = outputPricePerMillion
 )

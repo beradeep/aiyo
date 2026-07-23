@@ -17,6 +17,8 @@ sealed interface ChatUiEvent {
 
     data class OnModelSelected(val model: Model) : ChatUiEvent
 
+    data class OnToggleFavoriteModel(val model: Model) : ChatUiEvent
+
     data object OnFetchModels : ChatUiEvent
 
     data object OnNewChat : ChatUiEvent

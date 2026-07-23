@@ -37,6 +37,8 @@ open class SettingsViewModel(
         when (settingsUiEvent) {
             is SettingsUiEvent.OnSetApiKey -> setApiKey(settingsUiEvent.apiKey)
             is SettingsUiEvent.OnModelSelected -> selectModel(settingsUiEvent.model)
+            is SettingsUiEvent.OnToggleFavoriteModel ->
+                modelRepository.toggleFavoriteModel(settingsUiEvent.model)
             SettingsUiEvent.OnFetchModels -> fetchModels()
             SettingsUiEvent.OnShowModelSelectionSheet -> showModelSelectionSheet()
             SettingsUiEvent.OnDismissModelSelectionSheet -> dismissModelSelectionSheet()
@@ -51,7 +53,16 @@ open class SettingsViewModel(
         loadFontSizes()
         loadApiKey()
         loadDefaultModel()
+        observeFavoriteModels()
         fetchModels()
+    }
+
+    private fun observeFavoriteModels() {
+        viewModelScope.launch {
+            modelRepository.getFavoriteModelIdsFlow().collect { favoriteModelIds ->
+                _uiState.update { it.copy(favoriteModelIds = favoriteModelIds) }
+            }
+        }
     }
 
     private fun loadThemeType() {
