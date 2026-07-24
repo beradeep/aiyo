@@ -17,7 +17,7 @@ class ModelRepositoryImpl(context: Context, val apiClient: DataApiClient) : Mode
     private val openAi get() = apiClient.openAI
 
     override suspend fun getModels(apiKey: String?): Result<List<Model>> = openAi?.let { client ->
-        safeCall {
+        runCatching {
             client.models().map(com.aallam.openai.api.model.Model::toModel)
         }
     } ?: Result.failure(IllegalStateException("OpenAI client not initialized"))
@@ -37,8 +37,6 @@ class ModelRepositoryImpl(context: Context, val apiClient: DataApiClient) : Mode
         val modelJson = json.encodeToString(model.toEntity())
         kvStore.putString(KEY_DEFAULT_MODEL, modelJson)
     }
-
-    private suspend fun <T> safeCall(call: suspend () -> T): Result<T> = runCatching { call() }
 
     companion object {
         private const val KEY_DEFAULT_MODEL = "default_model"

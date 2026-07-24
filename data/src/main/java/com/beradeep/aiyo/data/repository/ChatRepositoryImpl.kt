@@ -34,7 +34,7 @@ class ChatRepositoryImpl(
         message: Message,
         apiKey: String?
     ): Result<String?> = openAi?.let { client ->
-        safeCall {
+        runCatching {
             client
                 .chatCompletion(
                     ChatCompletionRequest(
@@ -52,7 +52,7 @@ class ChatRepositoryImpl(
         messages: List<Message>,
         apiKey: String?
     ): Result<String?> = openAi?.let { client ->
-        safeCall {
+        runCatching {
             client
                 .chatCompletion(
                     ChatCompletionRequest(
@@ -71,7 +71,7 @@ class ChatRepositoryImpl(
         reason: Reason,
         apiKey: String?
     ): Result<Flow<String>> = openAi?.let { client ->
-        safeCall {
+        runCatching {
             client
                 .chatCompletions(
                     ChatCompletionRequest(
@@ -140,6 +140,4 @@ class ChatRepositoryImpl(
     override suspend fun deleteMessages(conversationId: java.util.UUID) {
         messageDao.deleteMessagesByConversation(conversationId)
     }
-
-    private suspend fun <T> safeCall(call: suspend () -> T): Result<T> = runCatching { call() }
 }

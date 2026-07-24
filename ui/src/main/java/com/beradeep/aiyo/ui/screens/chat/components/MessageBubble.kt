@@ -102,7 +102,7 @@ private fun customMarkdownTable(): MarkdownComponent = {
                 tableWidth = tableWidth,
                 style = style,
                 annotatorSettings = annotatorSettings(),
-                maxLines = 2,
+                maxLines = 2
             )
         },
         rowBlock = { content, header, tableWidth, style ->
@@ -112,12 +112,11 @@ private fun customMarkdownTable(): MarkdownComponent = {
                 tableWidth = tableWidth,
                 style = style,
                 annotatorSettings = annotatorSettings(),
-                maxLines = Int.MAX_VALUE,
+                maxLines = Int.MAX_VALUE
             )
-        },
+        }
     )
 }
-
 
 private fun TextStyle.withFontSize(fontSize: Int): TextStyle {
     return copy(

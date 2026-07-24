@@ -25,14 +25,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.beradeep.aiyo.ui.AiyoTheme
 import com.nomanr.composables.slider.BasicRangeSlider
 import com.nomanr.composables.slider.BasicSlider
 import com.nomanr.composables.slider.RangeSliderState
 import com.nomanr.composables.slider.SliderColors
 import com.nomanr.composables.slider.SliderState
-import com.beradeep.aiyo.ui.AiyoTheme
-import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
 fun Slider(
@@ -44,7 +44,7 @@ fun Slider(
     colors: SliderColors = SliderDefaults.colors(),
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     @IntRange(from = 0) steps: Int = 0,
-    valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
+    valueRange: ClosedFloatingPointRange<Float> = 0f..1f
 ) {
     val state =
         remember(steps, valueRange) {
@@ -52,7 +52,7 @@ fun Slider(
                 value,
                 steps,
                 onValueChangeFinished,
-                valueRange,
+                valueRange
             )
         }
 
@@ -65,7 +65,7 @@ fun Slider(
         modifier = modifier,
         enabled = enabled,
         interactionSource = interactionSource,
-        colors = colors,
+        colors = colors
     )
 }
 
@@ -75,7 +75,7 @@ fun Slider(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     colors: SliderColors = SliderDefaults.colors(),
-    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 ) {
     require(state.steps >= 0) { "steps should be >= 0" }
 
@@ -93,7 +93,7 @@ fun RangeSlider(
     onValueChangeFinished: (() -> Unit)? = null,
     colors: SliderColors = SliderDefaults.colors(),
     startInteractionSource: MutableInteractionSource = remember { MutableInteractionSource() },
-    endInteractionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    endInteractionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 ) {
     val state =
         remember(steps, valueRange) {
@@ -102,7 +102,7 @@ fun RangeSlider(
                 value.endInclusive,
                 steps,
                 onValueChangeFinished,
-                valueRange,
+                valueRange
             )
         }
 
@@ -117,7 +117,7 @@ fun RangeSlider(
         enabled = enabled,
         colors = colors,
         startInteractionSource = startInteractionSource,
-        endInteractionSource = endInteractionSource,
+        endInteractionSource = endInteractionSource
     )
 }
 
@@ -128,7 +128,7 @@ fun RangeSlider(
     enabled: Boolean = true,
     colors: SliderColors = SliderDefaults.colors(),
     startInteractionSource: MutableInteractionSource = remember { MutableInteractionSource() },
-    endInteractionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    endInteractionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 ) {
     require(state.steps >= 0) { "steps should be >= 0" }
 
@@ -138,7 +138,7 @@ fun RangeSlider(
         enabled = enabled,
         startInteractionSource = startInteractionSource,
         endInteractionSource = endInteractionSource,
-        colors = colors,
+        colors = colors
     )
 }
 
@@ -155,7 +155,7 @@ object SliderDefaults {
         disabledActiveTrackColor: Color = AiyoTheme.colors.disabled,
         disabledActiveTickColor: Color = AiyoTheme.colors.disabled,
         disabledInactiveTrackColor: Color = AiyoTheme.colors.disabled,
-        disabledInactiveTickColor: Color = Color.Unspecified,
+        disabledInactiveTickColor: Color = Color.Unspecified
     ) = SliderColors(
         thumbColor = thumbColor,
         activeTrackColor = activeTrackColor,
@@ -166,7 +166,7 @@ object SliderDefaults {
         disabledActiveTrackColor = disabledActiveTrackColor,
         disabledActiveTickColor = disabledActiveTickColor,
         disabledInactiveTrackColor = disabledInactiveTrackColor,
-        disabledInactiveTickColor = disabledInactiveTickColor,
+        disabledInactiveTickColor = disabledInactiveTickColor
     )
 }
 
@@ -176,66 +176,66 @@ private fun SliderPreview() {
     AiyoTheme {
         Column(
             modifier =
-                Modifier
-                    .background(Color.White)
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp)
-                    .fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(32.dp),
+            Modifier
+                .background(Color.White)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {
             BasicText(
                 text = "Slider Components",
-                style = AiyoTheme.typography.h3,
+                style = AiyoTheme.typography.h3
             )
 
             Column {
                 BasicText(
                     text = "Basic Slider",
-                    style = AiyoTheme.typography.h4,
+                    style = AiyoTheme.typography.h4
                 )
                 var value by remember { mutableFloatStateOf(0.5f) }
                 Slider(
                     value = value,
                     onValueChange = { value = it },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
             Column {
                 BasicText(
                     text = "Stepped Slider (5 steps)",
-                    style = AiyoTheme.typography.h4,
+                    style = AiyoTheme.typography.h4
                 )
                 var value by remember { mutableFloatStateOf(0.4f) }
                 Slider(
                     value = value,
                     onValueChange = { value = it },
                     steps = 4,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
             Column {
                 BasicText(
                     text = "Custom Range (0-100)",
-                    style = AiyoTheme.typography.h4,
+                    style = AiyoTheme.typography.h4
                 )
                 var value by remember { mutableFloatStateOf(30f) }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Slider(
                         value = value,
                         onValueChange = { value = it },
                         valueRange = 0f..100f,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f)
                     )
                     BasicText(
                         text = "${value.toInt()}",
                         style = AiyoTheme.typography.body1,
-                        modifier = Modifier.width(40.dp),
+                        modifier = Modifier.width(40.dp)
                     )
                 }
             }
@@ -243,52 +243,52 @@ private fun SliderPreview() {
             Column {
                 BasicText(
                     text = "Disabled States",
-                    style = AiyoTheme.typography.h4,
+                    style = AiyoTheme.typography.h4
                 )
                 Slider(
                     value = 0.3f,
                     onValueChange = {},
                     enabled = false,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(Modifier.height(8.dp))
                 Slider(
                     value = 0.7f,
                     onValueChange = {},
                     enabled = false,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
             Column {
-                 BasicText(
+                BasicText(
                     text = "Custom Colors",
-                    style = AiyoTheme.typography.h4,
+                    style = AiyoTheme.typography.h4
                 )
                 var value by remember { mutableFloatStateOf(0.5f) }
                 Slider(
                     value = value,
                     onValueChange = { value = it },
                     colors =
-                        SliderDefaults.colors(
-                            thumbColor = AiyoTheme.colors.error,
-                            activeTrackColor = AiyoTheme.colors.error,
-                            inactiveTrackColor = AiyoTheme.colors.error.copy(alpha = 0.3f),
-                        ),
-                    modifier = Modifier.fillMaxWidth(),
+                    SliderDefaults.colors(
+                        thumbColor = AiyoTheme.colors.error,
+                        activeTrackColor = AiyoTheme.colors.error,
+                        inactiveTrackColor = AiyoTheme.colors.error.copy(alpha = 0.3f)
+                    ),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
             Column {
-                 BasicText(
+                BasicText(
                     text = "Interactive Slider",
-                    style = AiyoTheme.typography.h4,
+                    style = AiyoTheme.typography.h4
                 )
                 var value by remember { mutableFloatStateOf(50f) }
                 var isEditing by remember { mutableStateOf(false) }
-                 BasicText(
+                BasicText(
                     text = if (isEditing) "Editing..." else "Value: ${value.toInt()}",
-                    style = AiyoTheme.typography.body1,
+                    style = AiyoTheme.typography.body1
                 )
                 Slider(
                     value = value,
@@ -298,7 +298,7 @@ private fun SliderPreview() {
                     },
                     valueRange = 0f..100f,
                     onValueChangeFinished = { isEditing = false },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }
@@ -311,49 +311,49 @@ private fun RangeSliderPreview() {
     AiyoTheme {
         Column(
             modifier =
-                Modifier
-                    .background(Color.White)
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(32.dp),
+            Modifier
+                .background(Color.White)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {
-             BasicText(
+            BasicText(
                 text = "Range Slider Components",
-                style = AiyoTheme.typography.h3,
+                style = AiyoTheme.typography.h3
             )
 
             Column {
-                 BasicText(
+                BasicText(
                     text = "Basic Range Slider",
-                    style = AiyoTheme.typography.h4,
+                    style = AiyoTheme.typography.h4
                 )
                 var range by remember { mutableStateOf(0.2f..0.8f) }
                 RangeSlider(
                     value = range,
                     onValueChange = { range = it },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
             Column {
-                 BasicText(
+                BasicText(
                     text = "Stepped Range Slider (5 steps)",
-                    style = AiyoTheme.typography.h4,
+                    style = AiyoTheme.typography.h4
                 )
                 var range by remember { mutableStateOf(0.2f..0.6f) }
                 RangeSlider(
                     value = range,
                     onValueChange = { range = it },
                     steps = 4,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
             Column {
-                 BasicText(
+                BasicText(
                     text = "Custom Range (0-100)",
-                    style = AiyoTheme.typography.h4,
+                    style = AiyoTheme.typography.h4
                 )
                 var range by remember { mutableStateOf(20f..80f) }
                 Column {
@@ -361,66 +361,66 @@ private fun RangeSliderPreview() {
                         value = range,
                         onValueChange = { range = it },
                         valueRange = 0f..100f,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth()
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                         BasicText(
+                        BasicText(
                             text = "Start: ${range.start.toInt()}",
-                            style = AiyoTheme.typography.body1,
+                            style = AiyoTheme.typography.body1
                         )
-                         BasicText(
+                        BasicText(
                             text = "End: ${range.endInclusive.toInt()}",
-                            style = AiyoTheme.typography.body1,
+                            style = AiyoTheme.typography.body1
                         )
                     }
                 }
             }
 
             Column {
-                 BasicText(
+                BasicText(
                     text = "Disabled State",
-                    style = AiyoTheme.typography.h4,
+                    style = AiyoTheme.typography.h4
                 )
                 RangeSlider(
                     value = 0.3f..0.7f,
                     onValueChange = {},
                     enabled = false,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
             Column {
-                 BasicText(
+                BasicText(
                     text = "Custom Colors",
-                    style = AiyoTheme.typography.h4,
+                    style = AiyoTheme.typography.h4
                 )
                 var range by remember { mutableStateOf(0.3f..0.7f) }
                 RangeSlider(
                     value = range,
                     onValueChange = { range = it },
                     colors =
-                        SliderDefaults.colors(
-                            thumbColor = AiyoTheme.colors.error,
-                            activeTrackColor = AiyoTheme.colors.error,
-                            inactiveTrackColor = AiyoTheme.colors.error.copy(alpha = 0.3f),
-                        ),
-                    modifier = Modifier.fillMaxWidth(),
+                    SliderDefaults.colors(
+                        thumbColor = AiyoTheme.colors.error,
+                        activeTrackColor = AiyoTheme.colors.error,
+                        inactiveTrackColor = AiyoTheme.colors.error.copy(alpha = 0.3f)
+                    ),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
             Column {
-                 BasicText(
+                BasicText(
                     text = "Interactive Range Slider",
-                    style = AiyoTheme.typography.h4,
+                    style = AiyoTheme.typography.h4
                 )
                 var range by remember { mutableStateOf(30f..70f) }
                 var isEditing by remember { mutableStateOf(false) }
-                 BasicText(
+                BasicText(
                     text = if (isEditing) "Editing..." else "Range: ${range.start.toInt()} - ${range.endInclusive.toInt()}",
-                    style = AiyoTheme.typography.body1,
+                    style = AiyoTheme.typography.body1
                 )
                 RangeSlider(
                     value = range,
@@ -430,7 +430,7 @@ private fun RangeSliderPreview() {
                     },
                     valueRange = 0f..100f,
                     onValueChangeFinished = { isEditing = false },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }
