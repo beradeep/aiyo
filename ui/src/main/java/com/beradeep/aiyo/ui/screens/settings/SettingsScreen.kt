@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.InvertColors
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.ModelTraining
 import androidx.compose.material.icons.filled.FormatSize
+import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.MaterialTheme
@@ -43,6 +44,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.beradeep.aiyo.domain.model.Credits
 import com.beradeep.aiyo.domain.model.Model
 import com.beradeep.aiyo.domain.model.ThemeType
 import com.beradeep.aiyo.domain.repository.SettingRepository
@@ -62,6 +64,7 @@ import com.beradeep.aiyo.ui.basics.components.textfield.OutlinedTextField
 import com.beradeep.aiyo.ui.basics.components.topbar.TopBar
 import com.beradeep.aiyo.ui.screens.chat.components.ModelSelectorChip
 import com.beradeep.aiyo.ui.screens.components.ModelSelectionSheet
+import java.util.Locale
 import kotlin.math.roundToInt
 
 @Composable
@@ -118,6 +121,14 @@ fun SettingsScreen(
                     apiKey = uiState.apiKey,
                     onApiKeyChanged = { newKey ->
                         viewModel.onUiEvent(SettingsUiEvent.OnSetApiKey(newKey))
+                    }
+                )
+                CreditsSetting(
+                    credits = uiState.credits,
+                    isLoadingCredits = uiState.isLoadingCredits,
+                    hasApiKey = !uiState.apiKey.isNullOrBlank(),
+                    onRefresh = {
+                        viewModel.onUiEvent(SettingsUiEvent.OnRefreshCredits)
                     }
                 )
             }
@@ -332,6 +343,54 @@ private fun ApiKeySetting(
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
+    }
+}
+
+@Composable
+private fun CreditsSetting(
+    credits: Credits?,
+    isLoadingCredits: Boolean,
+    hasApiKey: Boolean,
+    onRefresh: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "Credits",
+                style = LocalTypography.current.body1
+            )
+            Text(
+                text = when {
+                    !hasApiKey -> "Set an API key to see your balance."
+                    isLoadingCredits -> "Loading..."
+                    credits != null -> String.format(
+                        Locale.US,
+                        "$%.2f remaining ($%.2f used of $%.2f)",
+                        credits.remaining,
+                        credits.totalUsage,
+                        credits.totalCredits
+                    )
+                    else -> "Couldn't load balance. Tap refresh to retry."
+                },
+                color = AiyoTheme.colors.textSecondary,
+                style = AiyoTheme.typography.body3
+            )
+        }
+        if (hasApiKey) {
+            IconButton(
+                onClick = onRefresh,
+                variant = IconButtonVariant.PrimaryGhost
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Refresh,
+                    contentDescription = "Refresh credits"
+                )
+            }
+        }
     }
 }
 

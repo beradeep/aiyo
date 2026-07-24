@@ -4,10 +4,12 @@ import android.content.Context
 import com.beradeep.aiyo.data.local.db.dao.ConversationDao
 import com.beradeep.aiyo.data.local.db.dao.MessageDao
 import com.beradeep.aiyo.data.remote.DataApiClient
+import com.beradeep.aiyo.data.repository.AccountRepositoryImpl
 import com.beradeep.aiyo.data.repository.ApiKeyRepositoryImpl
 import com.beradeep.aiyo.data.repository.ChatRepositoryImpl
 import com.beradeep.aiyo.data.repository.ModelRepositoryImpl
 import com.beradeep.aiyo.data.repository.SettingRepositoryImpl
+import com.beradeep.aiyo.domain.repository.AccountRepository
 import com.beradeep.aiyo.domain.repository.ApiKeyRepository
 import com.beradeep.aiyo.domain.repository.ChatRepository
 import com.beradeep.aiyo.domain.repository.ModelRepository
@@ -48,4 +50,10 @@ object RepositoryModule {
     fun provideSettingsRepository(
         @ApplicationContext context: Context
     ): SettingRepository = SettingRepositoryImpl(context)
+
+    @Provides
+    @Singleton
+    fun provideAccountRepository(
+        apiKeyRepository: ApiKeyRepository
+    ): AccountRepository = AccountRepositoryImpl(apiKeyRepository)
 }
