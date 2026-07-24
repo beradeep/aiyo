@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.beradeep.aiyo.domain.ApiClient
 import com.beradeep.aiyo.domain.model.Model
 import com.beradeep.aiyo.domain.model.ThemeType
+import com.beradeep.aiyo.domain.repository.AccountRepository
 import com.beradeep.aiyo.domain.repository.ApiKeyRepository
 import com.beradeep.aiyo.domain.repository.ModelRepository
 import com.beradeep.aiyo.domain.repository.SettingRepository
@@ -20,6 +21,7 @@ open class SettingsViewModel(
     private val apiKeyRepository: ApiKeyRepository,
     private val modelRepository: ModelRepository,
     private val settingsRepository: SettingRepository,
+    private val accountRepository: AccountRepository,
     private val apiClient: ApiClient
 ) : ViewModel() {
 
@@ -38,6 +40,7 @@ open class SettingsViewModel(
             is SettingsUiEvent.OnSetApiKey -> setApiKey(settingsUiEvent.apiKey)
             is SettingsUiEvent.OnModelSelected -> selectModel(settingsUiEvent.model)
             SettingsUiEvent.OnFetchModels -> fetchModels()
+            SettingsUiEvent.OnRefreshCredits -> loadCredits()
             SettingsUiEvent.OnShowModelSelectionSheet -> showModelSelectionSheet()
             SettingsUiEvent.OnDismissModelSelectionSheet -> dismissModelSelectionSheet()
             is SettingsUiEvent.OnUpdateThemeType -> setThemeType(settingsUiEvent.themeType)
@@ -52,6 +55,15 @@ open class SettingsViewModel(
         loadApiKey()
         loadDefaultModel()
         fetchModels()
+        loadCredits()
+    }
+
+    private fun loadCredits() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _uiState.update { it.copy(isLoadingCredits = true) }
+            val credits = accountRepository.getCredits().getOrNull()
+            _uiState.update { it.copy(credits = credits, isLoadingCredits = false) }
+        }
     }
 
     private fun loadThemeType() {

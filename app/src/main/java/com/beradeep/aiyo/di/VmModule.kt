@@ -1,6 +1,7 @@
 package com.beradeep.aiyo.di
 
 import com.beradeep.aiyo.domain.ApiClient
+import com.beradeep.aiyo.domain.repository.AccountRepository
 import com.beradeep.aiyo.domain.repository.ApiKeyRepository
 import com.beradeep.aiyo.domain.repository.ChatRepository
 import com.beradeep.aiyo.domain.repository.ModelRepository
@@ -34,10 +35,12 @@ constructor(
     apiKeyRepository: ApiKeyRepository,
     apiClient: ApiClient,
     modelRepository: ModelRepository,
-    settingRepository: SettingRepository
+    settingRepository: SettingRepository,
+    accountRepository: AccountRepository
 ) : SettingsViewModel(
     apiKeyRepository = apiKeyRepository,
     modelRepository = modelRepository,
     settingsRepository = settingRepository,
+    accountRepository = accountRepository,
     apiClient = apiClient
 )

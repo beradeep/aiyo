@@ -51,6 +51,7 @@ dependencies {
     // Api Client
     implementation(platform(libs.openai.client.bom))
     implementation(libs.openai.client)
+    implementation(libs.ktor.client.core)
     runtimeOnly(libs.ktor.client.okhttp)
 
     // Room
