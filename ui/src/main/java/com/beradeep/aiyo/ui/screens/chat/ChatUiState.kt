@@ -11,6 +11,7 @@ import com.mikepenz.markdown.model.State
 data class ChatUiState(
     val models: List<Model>,
     val selectedModel: Model,
+    val favoriteModelIds: Set<String>,
     val selectedConversation: Conversation?,
     val streamingResponse: String?,
     val isLoadingResponse: Boolean,
@@ -34,6 +35,7 @@ data class ChatUiState(
             ChatUiState(
                 models = listOf(defaultModel),
                 selectedModel = defaultModel,
+                favoriteModelIds = emptySet(),
                 selectedConversation = null,
                 streamingResponse = null,
                 isLoadingResponse = false,

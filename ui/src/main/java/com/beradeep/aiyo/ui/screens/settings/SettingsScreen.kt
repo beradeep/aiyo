@@ -197,8 +197,12 @@ fun SettingsScreen(
             },
             models = uiState.models,
             selectedModel = uiState.selectedModel,
+            favoriteModelIds = uiState.favoriteModelIds,
             onModelSelected = { model ->
                 viewModel.onUiEvent(SettingsUiEvent.OnModelSelected(model))
+            },
+            onToggleFavoriteModel = { model ->
+                viewModel.onUiEvent(SettingsUiEvent.OnToggleFavoriteModel(model))
             },
             onDismiss = {
                 viewModel.onUiEvent(SettingsUiEvent.OnDismissModelSelectionSheet)

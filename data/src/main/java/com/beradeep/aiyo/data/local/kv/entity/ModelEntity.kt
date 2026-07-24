@@ -8,5 +8,7 @@ data class ModelEntity(
     val id: String,
     val ownedBy: String? = null,
     @Serializable(with = DateSerializer::class)
-    val createdAt: java.util.Date? = null
+    val createdAt: java.util.Date? = null,
+    val inputPricePerMillion: Double? = null,
+    val outputPricePerMillion: Double? = null
 )

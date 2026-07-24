@@ -5,7 +5,9 @@ import java.util.Date
 data class Model(
     val id: String,
     val ownedBy: String? = null,
-    val createdAt: Date? = null
+    val createdAt: Date? = null,
+    val inputPricePerMillion: Double? = null,
+    val outputPricePerMillion: Double? = null
 ) {
     override fun equals(other: Any?): Boolean {
         return this.id == (other as Model).id

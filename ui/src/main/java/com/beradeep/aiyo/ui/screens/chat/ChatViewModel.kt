@@ -65,6 +65,7 @@ open class ChatViewModel(
         }.onStart {
             loadApiKey()
             observeFontSizes()
+            observeFavoriteModels()
             loadDefaultModel()
             fetchModels()
         }.stateIn(
@@ -86,6 +87,8 @@ open class ChatViewModel(
             is ChatUiEvent.OnCancelPreloadMarkdownJobs -> cancelExistingPreloadJobs()
             is ChatUiEvent.OnFetchModels -> viewModelScope.launch { fetchModels() }
             is ChatUiEvent.OnModelSelected -> viewModelScope.launch { selectModel(chatUiEvent.model) }
+            is ChatUiEvent.OnToggleFavoriteModel ->
+                modelRepository.toggleFavoriteModel(chatUiEvent.model)
             is ChatUiEvent.OnConversationSelected -> viewModelScope.launch {
                 selectConversation(chatUiEvent.conversation)
             }
@@ -150,6 +153,14 @@ open class ChatViewModel(
         viewModelScope.launch {
             settingRepository.getResponseFontSizeFlow().collect { fontSize ->
                 _uiState.update { it.copy(responseFontSize = fontSize) }
+            }
+        }
+    }
+
+    private fun observeFavoriteModels() {
+        viewModelScope.launch {
+            modelRepository.getFavoriteModelIdsFlow().collect { favoriteModelIds ->
+                _uiState.update { it.copy(favoriteModelIds = favoriteModelIds) }
             }
         }
     }

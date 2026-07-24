@@ -398,9 +398,13 @@ private fun ChatScreen(
             isVisible = showModelSheet,
             models = uiState.models,
             selectedModel = uiState.selectedModel,
+            favoriteModelIds = uiState.favoriteModelIds,
             onModelSelected = { model ->
                 onUiEvent(ChatUiEvent.OnModelSelected(model))
                 showModelSheet = false
+            },
+            onToggleFavoriteModel = { model ->
+                onUiEvent(ChatUiEvent.OnToggleFavoriteModel(model))
             },
             isFetchingModels = uiState.isFetchingModels,
             fetchModels = { onUiEvent(ChatUiEvent.OnFetchModels) },
