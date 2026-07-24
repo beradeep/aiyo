@@ -251,7 +251,7 @@ open class ChatViewModel(
             val summaryTitle =
                 chatRepository.getChatCompletion(
                     apiKey = uiState.value.apiKey,
-                    model = Model("mistralai/mistral-nemo:free"),
+                    model = uiState.value.selectedModel,
                     messages = messages.map(UiMessage::toMessage) + prompt
                 )
             summaryTitle
