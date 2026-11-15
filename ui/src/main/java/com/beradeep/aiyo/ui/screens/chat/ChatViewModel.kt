@@ -65,7 +65,7 @@ open class ChatViewModel(
         }.onStart {
             loadApiKey()
             observeFontSizes()
-            loadDefaultModel()
+            observeDefaultModel()
             fetchModels()
         }.stateIn(
             viewModelScope,
@@ -76,6 +76,7 @@ open class ChatViewModel(
     private val preloadJobs = mutableIntObjectMapOf<Job>()
     private var responseJob: Job? = null
     private var isObservingFontSizes = false
+    private var isObservingDefaultModel = false
 
     fun onUiEvent(chatUiEvent: ChatUiEvent) {
         when (chatUiEvent) {
@@ -154,10 +155,17 @@ open class ChatViewModel(
         }
     }
 
-    private fun loadDefaultModel() {
+    private fun observeDefaultModel() {
+        if (isObservingDefaultModel) return
+        isObservingDefaultModel = true
+
         viewModelScope.launch {
-            defaultModel = modelRepository.getDefaultModel()
-            _uiState.update { it.copy(selectedModel = defaultModel) }
+            modelRepository.getDefaultModelFlow().collect { model ->
+                defaultModel = model
+                if (_uiState.value.selectedConversation == null) {
+                    _uiState.update { it.copy(selectedModel = model) }
+                }
+            }
         }
     }
 
@@ -292,7 +300,6 @@ open class ChatViewModel(
                         currentSelected
                     }
                     modelRepository.setDefaultModel(newSelected)
-                    loadDefaultModel()
                 }
             _uiState.update { it.copy(isFetchingModels = false) }
         }
